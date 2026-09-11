@@ -115,10 +115,11 @@
       <!-- ---------- right column ---------- -->
       <div class="hero__cards" id="heroCards">
 
-        <!-- Card 1 — rotating stamp -->
-        <div class="card-scatter" style="grid-area: stamp;">
-          <article class="card card--stamp" data-magnetic>
-            <div class="stamp">
+        <div class="hero__row hero__row--top">
+
+          <!-- Stamp — standalone circular link-button, not a grid card -->
+          <div class="card-scatter card-scatter--stamp">
+            <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
               <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
                 <defs>
                   <path id="stampCircle" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"></path>
@@ -129,60 +130,107 @@
                   </textPath>
                 </text>
               </svg>
-              <i data-lucide="asterisk" class="icon stamp__mark" aria-hidden="true"></i>
-            </div>
-          </article>
-        </div>
 
-        <!-- Card 3 — live status + clock -->
-        <div class="card-scatter" style="grid-area: clock;">
-          <article class="card card--clock" data-magnetic>
-            <p class="status">
-              <span class="status__dot" aria-hidden="true"></span>
-              <span class="status__label">Új projekteket vállalok</span>
-            </p>
-            <p class="clock" id="clock">--:--:--</p>
-            <p class="clock__city">München</p>
-          </article>
-        </div>
+              <span class="stamp__inner" aria-hidden="true">
+                <i data-lucide="arrow-up-right" class="icon stamp__icon"></i>
+                <i data-lucide="arrow-up-right" class="icon stamp__icon stamp__icon--copy"></i>
+              </span>
+            </a>
+          </div>
 
-        <!-- Card 4 — terminal -->
-        <div class="card-scatter" style="grid-area: terminal;">
-          <article class="card card--terminal" data-magnetic>
-            <div class="term" aria-hidden="true">
-              <div class="term__bar">
-                <span class="term__dot term__dot--r"></span>
-                <span class="term__dot term__dot--a"></span>
-                <span class="term__dot term__dot--g"></span>
+          <!-- Music player -->
+          <div class="card-scatter card-scatter--player">
+            <article class="card player" id="musicCard" data-magnetic>
+
+              <div class="player__top">
+                <div class="player__art" aria-hidden="true">
+                  <i data-lucide="music-2" class="icon icon--sm"></i>
+                </div>
+
+                <div class="player__meta">
+                  <p class="player__title" id="playerTitle">Lo-fi Coding Mix</p>
+                  <p class="player__artist" id="playerArtist">prettyjohn1 · Pixabay</p>
+                </div>
+
+                <div class="eq" id="eq" aria-hidden="true">
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                  <span class="eq__bar"></span>
+                </div>
               </div>
-              <pre class="term__body" id="termBody"></pre>
-            </div>
-          </article>
-        </div>
 
-        <!-- Card 2 — lo-fi music toggle -->
-        <div class="card-scatter" style="grid-area: music;">
-          <article class="card card--music" id="musicCard" data-magnetic>
-            <p class="music__label">Lo-fi coding vibes</p>
+              <div class="player__progress">
+                <span class="player__time" id="timeElapsed">0:00</span>
 
-            <div class="music__row">
-              <button class="music__btn" id="musicBtn" type="button" aria-label="Zene lejátszása" aria-pressed="false">
-                <i data-lucide="play"  class="icon icon--sm music__icon music__icon--play"></i>
-                <i data-lucide="pause" class="icon icon--sm music__icon music__icon--pause"></i>
-              </button>
+                <div class="player__bar" id="progressBar" role="slider" tabindex="0"
+                     aria-label="Lejátszási pozíció" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <div class="player__bar-fill" id="progressFill"></div>
+                  <div class="player__bar-handle" id="progressHandle"></div>
+                </div>
 
-              <div class="eq" id="eq" aria-hidden="true">
-                <span class="eq__bar"></span>
-                <span class="eq__bar"></span>
-                <span class="eq__bar"></span>
-                <span class="eq__bar"></span>
-                <span class="eq__bar"></span>
+                <span class="player__time" id="timeRemaining">0:00</span>
               </div>
-            </div>
 
-            <audio id="lofi" src="assets/audio/lofi.mp3" loop preload="metadata"></audio>
-          </article>
-        </div>
+              <div class="player__controls">
+                <button class="player__btn player__btn--skip" id="prevBtn" type="button" aria-label="Előző szám">
+                  <i data-lucide="skip-back" class="icon icon--sm"></i>
+                </button>
+
+                <button class="player__btn player__btn--play" id="musicBtn" type="button" aria-label="Lejátszás" aria-pressed="false">
+                  <i data-lucide="play"  class="icon player__icon player__icon--play"></i>
+                  <i data-lucide="pause" class="icon player__icon player__icon--pause"></i>
+                </button>
+
+                <button class="player__btn player__btn--skip" id="nextBtn" type="button" aria-label="Következő szám">
+                  <i data-lucide="skip-forward" class="icon icon--sm"></i>
+                </button>
+
+                <button class="player__btn player__btn--mute" id="muteBtn" type="button" aria-label="Némítás" aria-pressed="false">
+                  <i data-lucide="volume-2" class="icon icon--sm player__icon player__icon--unmuted"></i>
+                  <i data-lucide="volume-x" class="icon icon--sm player__icon player__icon--muted"></i>
+                </button>
+              </div>
+
+              <audio id="lofi" preload="metadata"></audio>
+            </article>
+          </div>
+
+        </div><!-- /.hero__row--top -->
+
+        <div class="hero__row hero__row--bottom">
+
+          <!-- Terminal -->
+          <div class="card-scatter card-scatter--terminal">
+            <article class="card card--terminal" data-magnetic>
+              <div class="term" aria-hidden="true">
+                <div class="term__bar">
+                  <span class="term__dot term__dot--r"></span>
+                  <span class="term__dot term__dot--a"></span>
+                  <span class="term__dot term__dot--g"></span>
+                </div>
+                <pre class="term__body" id="termBody"></pre>
+              </div>
+            </article>
+          </div>
+
+          <!-- "Currently building" card -->
+          <div class="card-scatter card-scatter--building">
+            <div class="card card--building" data-magnetic>
+              <span class="building__label">Jelenleg építem</span>
+              <span class="building__project">VarBro Motion Portfolio</span>
+              <svg class="building__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path d="M12 2 L21 19 L3 19 Z" stroke-linejoin="round"></path>
+                <path d="M12 9 L16.5 17 L7.5 17 Z" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+
+        </div><!-- /.hero__row--bottom -->
 
       </div><!-- /.hero__cards -->
 

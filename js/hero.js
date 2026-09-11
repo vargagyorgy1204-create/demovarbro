@@ -107,7 +107,6 @@
     if (!morph) return { start: function () {}, stop: function () {} };
 
     var current = morph.querySelector('.word');
-    var currentSplit = null;
     var idx = 0;
     var timer = null;
     var running = false;
@@ -149,51 +148,85 @@
     }
     window.addEventListener('resize', debounce(measure, 150));
 
-    /* ---- the cycle ---- */
-    function swap() {
-      var next = WORDS[(idx + 1) % WORDS.length];
-      idx = (idx + 1) % WORDS.length;
+    /* ---- enter: each letter climbs up into view from below, left to right.
+       Every character sits inside its own overflow-hidden mask so it can't
+       ghost above its resting position mid-animation; neither the mask nor
+       the character carries its own background/color, so the ancestor
+       .word's gradient-clipped-to-text paints straight through all of them
+       as one continuous gradient rather than one gradient per letter. */
+    function enterWord(incoming) {
+      var split = new SplitText(incoming, { type: 'chars', charsClass: 'wm-char' });
 
-      var incoming = document.createElement('span');
-      incoming.className = 'word';
-      incoming.textContent = next;
-      morph.appendChild(incoming);
-
-      var inSplit = new SplitText(incoming, { type: 'chars' });
-      gsap.set(inSplit.chars, { y: '0.5em', opacity: 0, filter: 'blur(8px)' });
-
-      var outgoing = current;
-      var outSplit = currentSplit;
-
-      if (outSplit) {
-        gsap.to(outSplit.chars, {
-          y: '-0.5em', opacity: 0, filter: 'blur(8px)',
-          duration: 0.4, ease: EASE, stagger: 0.018,
-          onComplete: function () {
-            outSplit.revert();
-            if (outgoing && outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
-          }
-        });
-      } else if (outgoing && outgoing.parentNode) {
-        outgoing.parentNode.removeChild(outgoing);
-      }
-
-      gsap.to(inSplit.chars, {
-        y: '0em', opacity: 1, filter: 'blur(0px)',
-        duration: 0.4, ease: EASE, stagger: 0.018
+      split.chars.forEach(function (charEl) {
+        var mask = document.createElement('span');
+        mask.className = 'wm-mask';
+        charEl.parentNode.insertBefore(mask, charEl);
+        mask.appendChild(charEl);
       });
 
-      current = incoming;
-      currentSplit = inSplit;
+      /* Each char's own background-clip:text needs the SAME gradient sized
+         to the whole word and offset by that char's own position, so the
+         per-character slices reconstruct one continuous gradient instead of
+         each glyph getting its own independent one. Measured before the
+         yPercent transform below (which only moves things vertically, but
+         measuring first keeps this unambiguous). */
+      var wordRect = incoming.getBoundingClientRect();
+      var wordWidth = wordRect.width;
+      split.chars.forEach(function (charEl) {
+        var charRect = charEl.getBoundingClientRect();
+        var offsetX = charRect.left - wordRect.left;
+        charEl.style.backgroundSize = wordWidth + 'px 100%';
+        charEl.style.backgroundPosition = (-offsetX) + 'px 0';
+      });
 
-      if (running) timer = setTimeout(swap, 1800);
+      gsap.set(split.chars, { yPercent: 100, opacity: 0 });
+
+      gsap.to(split.chars, {
+        yPercent: 0, opacity: 1,
+        duration: 0.45, ease: EASE, stagger: 0.028,
+        onComplete: function () {
+          split.revert();   /* settle back to plain text once fully in */
+        }
+      });
+    }
+
+    /* ---- the cycle: outgoing word fades/blurs out as a whole, THEN (not
+       overlapping) the incoming word's letters stagger in. ---- */
+    function swap() {
+      idx = (idx + 1) % WORDS.length;
+      var next = WORDS[idx];
+      var outgoing = current;
+
+      function startEnter() {
+        var incoming = document.createElement('span');
+        incoming.className = 'word';
+        incoming.textContent = next;
+        morph.appendChild(incoming);
+
+        enterWord(incoming);
+        current = incoming;
+
+        if (running) timer = setTimeout(swap, 1800);
+      }
+
+      if (outgoing) {
+        gsap.to(outgoing, {
+          opacity: 0, filter: 'blur(6px)', y: '-0.3em',
+          duration: 0.25, ease: EASE,
+          onComplete: function () {
+            if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
+            startEnter();
+          }
+        });
+      } else {
+        startEnter();
+      }
     }
 
     return {
       start: function () {
         if (VB.reduceMotion || running) return;   /* reduced motion: static "builds" */
         running = true;
-        if (current) currentSplit = new SplitText(current, { type: 'chars' });
         timer = setTimeout(swap, 1800);
       },
       stop: function () {

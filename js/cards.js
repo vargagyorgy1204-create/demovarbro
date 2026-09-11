@@ -1,8 +1,8 @@
 /* ==========================================================================
    cards.js — hero bento cards
-     Card 2  lo-fi music toggle, equaliser driven by real AnalyserNode data
-     Card 3  live status + Munich clock
-     Card 4  looping terminal typewriter
+     Music player  playlist-driven playback, real progress + seek, equaliser
+                   driven by real AnalyserNode data
+     Terminal      looping typewriter
 
    Exposes VB.cards = { init(), pause(), resume(), dispose() }
    pause()/resume() are wired to the hero's ScrollTrigger so no RAF loop or
@@ -19,17 +19,37 @@
   var REST_HEIGHT = 4;   /* px — equaliser bar height at rest */
 
   /* ======================================================================
-     Card 2 — lo-fi music
+     Music player
+     Adding a 2nd/3rd track later means only editing this array — nothing
+     else in this module needs to change.
      ====================================================================== */
+  var PLAYLIST = [
+    { title: 'Lo-fi Coding Mix', artist: 'prettyjohn1 · Pixabay', src: 'assets/audio/lofi.mp3' }
+  ];
+  var currentTrackIndex = 0;
+
   var music = (function () {
     var card = document.getElementById('musicCard');
     var btn = document.getElementById('musicBtn');
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var muteBtn = document.getElementById('muteBtn');
     var audio = document.getElementById('lofi');
     var eq = document.getElementById('eq');
-    if (!card || !btn || !audio || !eq) return { pause: function () {}, dispose: function () {} };
+    var titleEl = document.getElementById('playerTitle');
+    var artistEl = document.getElementById('playerArtist');
+    var elapsedEl = document.getElementById('timeElapsed');
+    var remainingEl = document.getElementById('timeRemaining');
+    var bar = document.getElementById('progressBar');
+    var fill = document.getElementById('progressFill');
+    var handle = document.getElementById('progressHandle');
+
+    if (!card || !btn || !audio || !eq || !prevBtn || !nextBtn || !muteBtn || !bar) {
+      return { pause: function () {}, resume: function () {}, dispose: function () {} };
+    }
 
     var bars = Array.prototype.slice.call(eq.querySelectorAll('.eq__bar'));
-    var maxHeight = 40;
+    var maxHeight = 32;
 
     var ctx = null;
     var analyser = null;
@@ -38,35 +58,45 @@
     var rafId = null;
     var levels = bars.map(function () { return REST_HEIGHT; });
     var disabled = false;
+    var metadataReady = false;
+    var dragging = false;
 
-    /* 5 buckets across the 32 bins of an fftSize-64 analyser */
-    var BUCKETS = [[0, 2], [2, 5], [5, 10], [10, 18], [18, 32]];
+    /* 8 buckets across the 32 bins of an fftSize-64 analyser — unchanged
+       analyser setup, just re-bucketed from 5 groups to 8. */
+    var BUCKETS = [
+      [0, 2], [2, 4], [4, 6], [6, 9],
+      [9, 13], [13, 18], [18, 24], [24, 32]
+    ];
 
     function disable(reason) {
       if (disabled) return;
       disabled = true;
       card.classList.add('is-disabled');
-      btn.disabled = true;
-      btn.setAttribute('aria-disabled', 'true');
+      [btn, prevBtn, nextBtn, muteBtn].forEach(function (b) {
+        b.disabled = true;
+        b.setAttribute('aria-disabled', 'true');
+      });
       stopLoop();
       restBars();
-      console.warn('[VarBro] Lo-fi card disabled: ' + reason);
+      console.warn('[VarBro] Music player disabled: ' + reason);
     }
 
-    /* The audio file is not in the repo yet — fail visibly, never throw. */
-    var MISSING = 'assets/audio/lofi.mp3 could not be loaded (missing or unsupported).';
+    /* The audio file may not be in the repo — fail visibly, never throw. */
+    var MISSING = 'the current track could not be loaded (missing or unsupported).';
 
     audio.addEventListener('error', function () { disable(MISSING); });
 
-    /* <audio preload="metadata"> starts fetching while the document is still
-       parsing, so a 404 can fire before this script runs. Check the settled
-       state too, exactly as the logo guard does. */
     function checkSettledError() {
       if (audio.error || audio.networkState === 3 /* NETWORK_NO_SOURCE */) disable(MISSING);
     }
-    checkSettledError();
     /* Give a still-in-flight request a chance to fail before judging it. */
     window.addEventListener('load', checkSettledError);
+
+    audio.addEventListener('loadedmetadata', function () {
+      metadataReady = true;
+      bar.removeAttribute('aria-disabled');
+      updateProgressUI();
+    });
 
     function restBars() {
       bars.forEach(function (bar, i) {
@@ -126,7 +156,7 @@
 
     function setPlayingState(playing) {
       btn.setAttribute('aria-pressed', String(playing));
-      btn.setAttribute('aria-label', playing ? 'Zene szüneteltetése' : 'Zene lejátszása');
+      btn.setAttribute('aria-label', playing ? 'Szüneteltetés' : 'Lejátszás');
     }
 
     function play() {
@@ -146,6 +176,77 @@
     function pauseAudio() {
       audio.pause();
     }
+
+    /* ---------------------------------------------------------- playlist */
+
+    function formatTime(sec) {
+      if (!isFinite(sec) || sec < 0) sec = 0;
+      var m = Math.floor(sec / 60);
+      var s = Math.floor(sec % 60);
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function resetProgressUI() {
+      metadataReady = false;
+      bar.setAttribute('aria-disabled', 'true');
+      bar.setAttribute('aria-valuenow', '0');
+      fill.style.width = '0%';
+      handle.style.insetInlineStart = '0%';
+      elapsedEl.textContent = '0:00';
+      remainingEl.textContent = '0:00';
+    }
+
+    function updateProgressUI() {
+      if (!metadataReady || !audio.duration) return;
+      var pct = (audio.currentTime / audio.duration) * 100;
+      fill.style.width = pct + '%';
+      handle.style.insetInlineStart = pct + '%';
+      bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      elapsedEl.textContent = formatTime(audio.currentTime);
+      remainingEl.textContent = formatTime(audio.duration - audio.currentTime);
+    }
+
+    function loadTrack(index, opts) {
+      opts = opts || {};
+      currentTrackIndex = ((index % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
+      var track = PLAYLIST[currentTrackIndex];
+
+      titleEl.textContent = track.title;
+      artistEl.textContent = track.artist;
+      resetProgressUI();
+      /* Setting .src synchronously resets networkState to NETWORK_NO_SOURCE
+         as the first step of the load algorithm, before the async fetch has
+         even started — checking it right here would read that transient
+         reset, not a real failure. The 'error' event (attached above) is the
+         reliable signal for a genuine 404 on a freshly assigned source. */
+      audio.src = track.src;
+
+      if (opts.wasPlaying) play(); else pauseAudio();
+    }
+
+    function prevTrack() {
+      var wasPlaying = !audio.paused;
+      loadTrack(currentTrackIndex - 1, { wasPlaying: wasPlaying });
+    }
+
+    function nextTrack(auto) {
+      var wasPlaying = auto || !audio.paused;
+      loadTrack(currentTrackIndex + 1, { wasPlaying: wasPlaying });
+    }
+
+    prevBtn.addEventListener('click', function () { if (!disabled) prevTrack(); });
+    nextBtn.addEventListener('click', function () { if (!disabled) nextTrack(false); });
+
+    /* With a single track this cycles to itself — expected, and becomes
+       fully functional the moment PLAYLIST grows past one entry. */
+    audio.addEventListener('ended', function () { nextTrack(true); });
+
+    muteBtn.addEventListener('click', function () {
+      if (disabled) return;
+      audio.muted = !audio.muted;
+      muteBtn.setAttribute('aria-pressed', String(audio.muted));
+      muteBtn.setAttribute('aria-label', audio.muted ? 'Némítás feloldása' : 'Némítás');
+    });
 
     btn.addEventListener('click', function () {
       if (disabled) return;
@@ -178,7 +279,71 @@
       }
     });
 
+    audio.addEventListener('timeupdate', function () {
+      if (!dragging) updateProgressUI();
+    });
+
+    /* ------------------------------------------------------------- seek */
+
+    function ratioFromEvent(e) {
+      var r = bar.getBoundingClientRect();
+      var x = (e.clientX - r.left) / Math.max(r.width, 1);
+      return Math.min(1, Math.max(0, x));
+    }
+
+    function seekPreview(ratio) {
+      /* Move the fill/handle immediately while dragging, ahead of the
+         audio element's own (throttled) timeupdate events. */
+      var pct = ratio * 100;
+      fill.style.width = pct + '%';
+      handle.style.insetInlineStart = pct + '%';
+      bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (audio.duration) {
+        elapsedEl.textContent = formatTime(ratio * audio.duration);
+        remainingEl.textContent = formatTime(audio.duration - ratio * audio.duration);
+      }
+    }
+
+    bar.addEventListener('pointerdown', function (e) {
+      if (disabled || !metadataReady) return;
+      dragging = true;
+      bar.setPointerCapture(e.pointerId);
+      seekPreview(ratioFromEvent(e));
+    });
+
+    bar.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      seekPreview(ratioFromEvent(e));
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      if (audio.duration) audio.currentTime = ratioFromEvent(e) * audio.duration;
+      updateProgressUI();
+    }
+
+    bar.addEventListener('pointerup', endDrag);
+    bar.addEventListener('pointercancel', function () { dragging = false; });
+
+    /* Keyboard seek: the bar is a role="slider". */
+    bar.addEventListener('keydown', function (e) {
+      if (disabled || !metadataReady) return;
+      var step = 5;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
+        updateProgressUI();
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+        audio.currentTime = Math.max(0, audio.currentTime - step);
+        updateProgressUI();
+        e.preventDefault();
+      }
+    });
+
     restBars();
+    resetProgressUI();
+    loadTrack(0, { wasPlaying: false });
 
     return {
       pause: function () { stopLoop(); },
@@ -192,54 +357,7 @@
   })();
 
   /* ======================================================================
-     Card 3 — live status + Munich clock
-     ====================================================================== */
-  var clock = (function () {
-    var el = document.getElementById('clock');
-    if (!el) return { pause: function () {}, resume: function () {}, dispose: function () {} };
-
-    var formatter = null;
-    try {
-      formatter = new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Europe/Berlin',
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    } catch (err) {
-      console.warn('[VarBro] Europe/Berlin time zone unavailable — clock falls back to local time.', err);
-    }
-
-    var timer = null;
-
-    function tick() {
-      var now = new Date();
-      if (formatter) {
-        /* Some locales emit a narrow no-break space around the separator. */
-        el.textContent = formatter.format(now).replace(/ | /g, ' ').trim();
-      } else {
-        el.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
-          .map(function (n) { return String(n).padStart(2, '0'); })
-          .join(':');
-      }
-    }
-
-    function start() {
-      tick();
-      if (timer === null) timer = setInterval(tick, 1000);
-    }
-
-    function stop() {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
-    }
-
-    return { start: start, pause: stop, resume: start, dispose: stop };
-  })();
-
-  /* ======================================================================
-     Card 4 — terminal typewriter
+     Terminal typewriter
      ====================================================================== */
   var terminal = (function () {
     var body = document.getElementById('termBody');
@@ -361,22 +479,18 @@
      ====================================================================== */
   VB.cards = {
     init: function () {
-      clock.start();
       terminal.start();
     },
     pause: function () {
       music.pause();
-      clock.pause();
       terminal.pause();
     },
     resume: function () {
       music.resume();
-      clock.resume();
       terminal.resume();
     },
     dispose: function () {
       music.dispose();
-      clock.dispose();
       terminal.dispose();
     }
   };
