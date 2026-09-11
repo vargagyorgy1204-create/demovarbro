@@ -706,12 +706,12 @@
     inline-size: clamp(120px, 12vw, 160px);
     aspect-ratio: 1;
     border-radius: 999px;
-    background: var(--card-primary);
+    background: var(--card-accent-warm);
     transition: background var(--dur) ease, transform var(--dur) ease;
   }
 
   .stamp:hover {
-    background: var(--card-accent-warm);
+    background: var(--card-primary);
     transform: scale(1.05);
   }
 
@@ -732,15 +732,20 @@
   .stamp__text {
     font-family: var(--font-accent);
     font-weight: 500;
-    font-size: 15px;
-    letter-spacing: 1.4px;
+    /* Sized (with the ring path radius, in the markup) for the narrower
+       band left once .stamp__inner grew from 30% to 70% of the diameter —
+       see the comment there. */
+    font-size: 12px;
+    letter-spacing: 1.1px;
     fill: rgb(255 255 255 / 0.9);
   }
 
   .stamp__inner {
     position: relative;
     z-index: 1;
-    inline-size: 30%;
+    /* 70% of the stamp's diameter — a slim ~30%-of-radius gradient stripe
+       remains outside it, not the near-solid disc a smaller circle left. */
+    inline-size: 70%;
     aspect-ratio: 1;
     border-radius: 999px;
     background: var(--pure-white);
@@ -755,9 +760,14 @@
      mouse-leave too, instead of snapping back. */
   .stamp__icon { position: absolute; transition: translate 0.3s ease-in-out; }
 
-  .stamp__icon--copy { translate: -150% 150%; }
+  /* translate % is relative to the icon's own (fixed, 22px) box, not the
+     white circle — so growing .stamp__inner to 70% needed a bigger offset
+     here too, or the "hidden" icon no longer clears the now much larger
+     circle and both copies show at once. 260% clears its ~56px radius at
+     the desktop clamp with margin to spare. */
+  .stamp__icon--copy { translate: -260% 260%; }
 
-  .stamp:hover .stamp__icon:not(.stamp__icon--copy) { translate: 150% -150%; }
+  .stamp:hover .stamp__icon:not(.stamp__icon--copy) { translate: 260% -260%; }
 
   .stamp:hover .stamp__icon--copy {
     translate: 0 0;

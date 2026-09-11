@@ -122,7 +122,9 @@
             <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
               <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
                 <defs>
-                  <path id="stampCircle" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"></path>
+                  <!-- radius 78 (of 100) centers the text within the narrower
+                       band left once the white circle grew to 70% diameter -->
+                  <path id="stampCircle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"></path>
                 </defs>
                 <text class="stamp__text">
                   <textPath href="#stampCircle" startOffset="0">
