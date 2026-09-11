@@ -1,0 +1,898 @@
+/* ==========================================================================
+   VarBro — demo build
+   Section 1: global foundation + hero
+   ========================================================================== */
+
+@layer reset, base, components, hero, responsive;
+
+/* --------------------------------------------------------------------------
+   Design tokens
+   -------------------------------------------------------------------------- */
+:root {
+  --card-primary: linear-gradient(135deg, #6c63ff 0%, #c850c0 100%);
+  --card-primary-a: #6c63ff;
+  --card-primary-b: #c850c0;
+  --card-secondary: #1a1f2e;
+  --card-secondary-light: #f6f3fa;
+  --card-accent-warm: linear-gradient(135deg, #7c1263 0%, #c850c0 100%);
+  --card-accent-warm-a: #7c1263;
+  --card-accent-warm-b: #c850c0;
+  --card-accent-cool: linear-gradient(135deg, #0e4d5c 0%, #1a8fa3 100%);
+  --card-accent-cool-a: #0e4d5c;
+  --card-accent-cool-b: #1a8fa3;
+  --anchor-purple: #4B1956;
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 0.3s;
+}
+
+/* Supplementary tokens — non-brand literals live here so that no raw hex
+   appears anywhere else in this file. */
+:root {
+  --pure-white: #ffffff;
+  --signal-green: #22c55e;
+  --term-red: #ff5f57;
+  --term-amber: #febc2e;
+  --term-green: #28c840;
+
+  --font-display: 'Syne', 'Syne Fallback', 'Trebuchet MS', sans-serif;
+  --font-accent: 'Space Grotesk', 'Grotesk Fallback', 'Segoe UI', sans-serif;
+  --font-body: 'Montserrat', 'Montserrat Fallback', 'Segoe UI', sans-serif;
+  --font-ui: 'Inter', 'Inter Fallback', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Mono Fallback', ui-monospace, monospace;
+
+  --shell-max: 1280px;
+  --shell-pad: 32px;
+
+  /* z-index scale */
+  --z-canvas: 0;
+  --z-content: 2;
+  --z-dots: 8000;
+  --z-menu: 9000;
+  --z-nav: 9500;
+  --z-cursor: 9998;
+  --z-preloader: 9999;
+}
+
+/* --------------------------------------------------------------------------
+   Metric-matched fallback fonts
+
+   Each local fallback is rescaled so its line box matches the web font it
+   stands in for. Without this, the swap from fallback to web font resizes the
+   hero text block and shifts the card grid — the whole of our measured CLS.
+   Percentages were measured from the real rendered metrics, not estimated.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Syne Fallback';
+  src: local('Trebuchet MS'), local('Helvetica Neue'), local('Arial');
+  font-weight: 800;
+  size-adjust: 165.97%;
+  ascent-override: 56.03%;
+  descent-override: 16.87%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Syne Fallback';
+  src: local('Trebuchet MS'), local('Helvetica Neue'), local('Arial');
+  font-weight: 700;
+  size-adjust: 114.30%;
+  ascent-override: 81.37%;
+  descent-override: 24.50%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Grotesk Fallback';
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
+  font-weight: 500;
+  size-adjust: 105.48%;
+  ascent-override: 92.91%;
+  descent-override: 27.49%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Grotesk Fallback';
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
+  font-weight: 700;
+  size-adjust: 101.46%;
+  ascent-override: 96.59%;
+  descent-override: 28.58%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Montserrat Fallback';
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
+  font-weight: 400;
+  size-adjust: 111.66%;
+  ascent-override: 86.87%;
+  descent-override: 22.39%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Montserrat Fallback';
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
+  font-weight: 700;
+  size-adjust: 110.42%;
+  ascent-override: 87.85%;
+  descent-override: 22.64%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
+  font-weight: 400;
+  size-adjust: 107.94%;
+  ascent-override: 89.86%;
+  descent-override: 22.23%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Mono Fallback';
+  src: local('Consolas'), local('Menlo'), local('Courier New');
+  font-weight: 400;
+  size-adjust: 108.93%;
+  ascent-override: 93.64%;
+  descent-override: 27.54%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------------------
+   Reset / base
+   -------------------------------------------------------------------------- */
+@layer reset {
+  html {
+    box-sizing: border-box;
+    overflow-x: clip;            /* no horizontal overflow, keeps sticky working */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html, body, h1, p, ul, li, figure, pre {
+    margin: 0;
+    padding: 0;
+  }
+
+  ul { list-style: none; }
+
+  *, *::before, *::after { box-sizing: inherit; }
+
+  img, svg, canvas { display: block; max-width: 100%; }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  a { color: inherit; text-decoration: none; }
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    font-weight: 400;
+    background: var(--card-secondary);
+    color: var(--pure-white);
+    overflow-x: clip;
+    /* Lenis drives scrolling; the native smooth behaviour must stay off. */
+    scroll-behavior: auto;
+  }
+
+  /* Focus ring — single source of truth for the whole site. */
+  :where(a, button, [tabindex]):focus-visible {
+    outline: 2px solid var(--card-primary-a);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* High-contrast mode: never rely on the brand colour alone. */
+  @media (forced-colors: active) {
+    :where(a, button, [tabindex]):focus-visible { outline-color: Highlight; }
+  }
+
+  /* Lucide icon sizing — never set width/height inline on an icon. */
+  .icon        { inline-size: 22px; block-size: 22px; stroke-width: 1.75; color: currentColor; }
+  .icon--sm    { inline-size: 18px; block-size: 18px; }
+  .icon--lg    { inline-size: 28px; block-size: 28px; }
+  svg.icon     { display: inline-block; vertical-align: middle; }
+}
+
+/* --------------------------------------------------------------------------
+   Components
+   -------------------------------------------------------------------------- */
+@layer components {
+
+  /* ---------- Button ---------- */
+  .btn {
+    position: relative;
+    display: inline-block;
+    padding: 14px 32px;
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    color: var(--card-primary-a);
+    border: 1.5px solid var(--card-primary-a);
+    border-radius: 999px;
+    background: transparent;
+    isolation: isolate;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--dur) ease;
+  }
+
+  /* Gradients can't be interpolated, so the fill is a pseudo-element that
+     fades in — visually identical to "background fills with the gradient". */
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--card-primary);
+    opacity: 0;
+    transition: opacity var(--dur) ease;
+  }
+
+  .btn:hover:not(:disabled),
+  .btn:focus-visible {
+    color: var(--pure-white);
+    border-color: transparent;
+  }
+
+  .btn:hover:not(:disabled)::before,
+  .btn:focus-visible::before { opacity: 1; }
+
+  /* On dark sections the outline reads white until hovered. */
+  [data-theme="dark"] .btn {
+    color: rgb(255 255 255 / 0.9);
+    border-color: rgb(255 255 255 / 0.9);
+  }
+
+  [data-theme="dark"] .btn:hover:not(:disabled),
+  [data-theme="dark"] .btn:focus-visible { color: var(--pure-white); border-color: transparent; }
+
+  .btn--quiet {
+    color: rgb(255 255 255 / 0.55);
+    border-color: rgb(255 255 255 / 0.22);
+  }
+
+  /* ---------- Preloader ---------- */
+  #preloader {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-preloader);
+    display: grid;
+    place-items: center;
+    background: var(--card-secondary);
+  }
+
+  /* Taken out of flow and centred: swapping the text re-centres it without
+     ever relaying out the overlay, so the cycle contributes nothing to CLS. */
+  .preloader__line {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: 0;
+    translate: 0 -50%;
+    block-size: 1.5em;
+    /* The element sizes as if empty, so retyping the line cannot register
+       as a layout shift at all. */
+    contain: strict;
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    color: rgb(255 255 255 / 0.75);
+    text-align: center;
+    padding-inline: 24px;
+  }
+
+  .preloader__line.is-final { color: rgb(255 255 255 / 0.95); }
+
+  /* Page is not scrollable until the preloader is gone. */
+  body:not(.is-loaded) { overflow: hidden; height: 100%; }
+
+  /* ---------- Nav bar ---------- */
+  .nav {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: var(--z-nav);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    background: transparent;
+    pointer-events: none;               /* only the controls are clickable */
+  }
+
+  .nav > * { pointer-events: auto; }
+
+  .nav__logo {
+    position: relative;
+    display: block;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card-primary);    /* shows through if the PNG is missing */
+  }
+
+  .nav__logo-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    transition: opacity 0.2s ease;
+  }
+
+  .nav__logo-img--light { opacity: 0; }
+
+  .nav--on-light .nav__logo-img--dark  { opacity: 0; }
+  .nav--on-light .nav__logo-img--light { opacity: 1; }
+
+  /* Visible only while the logo files are absent (see main.js). */
+  .nav__logo-fallback {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 19px;
+    color: var(--pure-white);
+  }
+
+  .nav__logo.is-missing .nav__logo-fallback { display: grid; }
+  .nav__logo.is-missing .nav__logo-img { display: none; }
+
+  /* ---------- Hamburger ---------- */
+  .burger {
+    display: grid;
+    gap: 6px;
+    inline-size: 24px;
+    padding: 10px 0;                    /* 44px tall touch target */
+    background: none;
+  }
+
+  .burger__line {
+    display: block;
+    inline-size: 24px;
+    block-size: 2px;
+    border-radius: 2px;
+    background: var(--pure-white);
+    transition: background-color 0.2s ease, transform 0.35s var(--ease-brand), opacity 0.2s ease;
+  }
+
+  .nav--on-light .burger__line { background: var(--card-secondary); }
+
+  /* X state — the menu is open. */
+  .burger.is-open .burger__line { background: var(--pure-white); }
+  .burger.is-open .burger__line:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .burger.is-open .burger__line:nth-child(2) { opacity: 0; }
+  .burger.is-open .burger__line:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+  /* ---------- Fullscreen menu ---------- */
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-menu);
+    background: var(--card-secondary);
+    clip-path: inset(0 0 100% 0);       /* wiped in from the top */
+    visibility: hidden;
+  }
+
+  .menu.is-open { visibility: visible; }
+
+  .menu__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    block-size: 100%;
+    padding: 24px;
+  }
+
+  .menu__list { text-align: center; }
+
+  .menu__link {
+    display: inline-block;
+    padding: 6px 12px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(32px, 6vw, 64px);
+    line-height: 1.35;
+    color: var(--pure-white);
+    transition: color var(--dur) ease;
+  }
+
+  .menu__link:hover { color: var(--card-primary-b); }
+
+  .menu__social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    color: rgb(255 255 255 / 0.6);
+    transition: color var(--dur) ease;
+  }
+
+  .menu__social-link:hover { color: var(--pure-white); }
+
+  /* ---------- Side dots ---------- */
+  .dots {
+    position: fixed;
+    inset-inline-end: 22px;
+    inset-block-start: 50%;
+    translate: 0 -50%;
+    z-index: var(--z-dots);
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    opacity: 0;                          /* hidden during hero */
+    pointer-events: none;
+  }
+
+  .dots.is-visible { pointer-events: auto; }
+
+  .dot {
+    inline-size: 8px;
+    block-size: 8px;
+    padding: 0;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.28);
+    transition: background-color var(--dur) ease;
+  }
+
+  .dot.is-active { background: var(--card-primary-a); }
+
+  .dots--on-light .dot { background: rgb(26 31 46 / 0.3); }
+  .dots--on-light .dot.is-active { background: var(--card-primary-a); }
+
+  /* The 24px WCAG target is provided by a transparent hit area. */
+  .dot::after {
+    content: "";
+    position: absolute;
+    inline-size: 24px;
+    block-size: 24px;
+    translate: -50% -50%;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+  }
+
+  .dot { position: relative; }
+
+  /* ---------- Custom cursor ---------- */
+  .cursor-dot,
+  .cursor-ring {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    z-index: var(--z-cursor);
+    border-radius: 999px;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    opacity: 0;
+    will-change: transform;
+  }
+
+  .cursor-dot {
+    inline-size: 6px;
+    block-size: 6px;
+    background: var(--pure-white);
+  }
+
+  .cursor-ring {
+    inline-size: 32px;
+    block-size: 32px;
+    border: 1.5px solid rgb(255 255 255 / 0.4);
+  }
+
+  body.has-cursor { cursor: none; }
+  body.has-cursor .cursor-dot,
+  body.has-cursor .cursor-ring { opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   Hero
+   -------------------------------------------------------------------------- */
+@layer hero {
+
+  #hero {
+    position: relative;
+    min-block-size: 100svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: var(--card-secondary);
+    padding-block: 120px 64px;
+  }
+
+  .hero__canvas {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-canvas);
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* CSS fallback background — applied by shader.js when WebGL is skipped. */
+  #hero.hero--css-bg {
+    /* Deliberately low-key: the brand colours are currents in a near-black
+       field, matching the shader, so white hero text stays legible. */
+    background:
+      radial-gradient(60% 80% at 18% 22%, color-mix(in srgb, var(--card-primary-a) 28%, transparent) 0%, transparent 62%),
+      radial-gradient(55% 70% at 82% 28%, color-mix(in srgb, var(--card-primary-b) 20%, transparent) 0%, transparent 64%),
+      radial-gradient(70% 90% at 50% 88%, color-mix(in srgb, var(--card-accent-cool-a) 42%, transparent) 0%, transparent 66%),
+      linear-gradient(135deg,
+        var(--card-secondary) 0%,
+        color-mix(in srgb, var(--card-accent-cool-a) 42%, var(--card-secondary)) 50%,
+        var(--card-secondary) 100%);
+    background-size: 180% 180%, 180% 180%, 180% 180%, 300% 300%;
+    background-position: 0% 50%, 100% 50%, 50% 100%, 0% 50%;
+    animation: heroDrift 20s linear infinite;
+  }
+
+  #hero.hero--css-bg .hero__canvas { display: none; }
+
+  @keyframes heroDrift {
+    0%   { background-position:   0% 50%, 100% 50%,  50% 100%,   0% 50%; }
+    50%  { background-position: 100% 50%,   0% 50%,  50%   0%, 100% 50%; }
+    100% { background-position:   0% 50%, 100% 50%,  50% 100%,   0% 50%; }
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: var(--z-content);
+    inline-size: 100%;
+    max-inline-size: var(--shell-max);
+    margin-inline: auto;
+    padding-inline: var(--shell-pad);
+    display: grid;
+    /* minmax(0, …) drops the auto min-content floor: without it the measured
+       min-width on the morph word widens the text column and steals width
+       from the cards the moment JS sets it. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 56px;
+  }
+
+  /* ---------- Left column ---------- */
+  .hero-eyebrow {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.6);
+    margin-block-end: 20px;
+  }
+
+  .hero-headline {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(34px, 5.2vw, 76px);
+    line-height: 1.05;
+    color: var(--pure-white);
+    margin-block-end: 24px;
+    text-wrap: balance;
+  }
+
+  .hero-headline__static { display: block; }
+
+  .hero-headline__morph {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    /* min-width is measured in JS so the longest word never reflows the line */
+  }
+
+  /* Zero-width space keeps the line box height while .word is absolute. */
+  .hero-headline__morph::before { content: "\200b"; }
+
+  .hero-headline__morph .word {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    white-space: nowrap;
+    color: var(--pure-white);
+  }
+
+  .hero-sub {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(15px, 1.6vw, 18px);
+    line-height: 1.7;
+    color: rgb(255 255 255 / 0.72);
+    max-inline-size: 480px;
+    margin-block-end: 32px;
+    text-wrap: pretty;
+  }
+
+  /* ---------- Right column: bento card grid ---------- */
+  .hero__cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "stamp    clock"
+      "terminal terminal"
+      "music    music";
+    gap: 16px;
+    perspective: 900px;
+  }
+
+  .card-scatter { display: grid; }
+
+  .card {
+    position: relative;
+    padding: 20px;
+    border-radius: 20px;
+    background: rgb(255 255 255 / 0.04);
+    border: 1px solid rgb(255 255 255 / 0.09);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* ---------- Card 1: rotating stamp ---------- */
+  .card--stamp { display: grid; place-items: center; min-block-size: 190px; }
+
+  .stamp {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 132px;
+    block-size: 132px;
+  }
+
+  .stamp__ring {
+    inline-size: 100%;
+    block-size: 100%;
+    animation: stampSpin 14s linear infinite;
+  }
+
+  @keyframes stampSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  .stamp__text {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 1.4px;
+    fill: rgb(255 255 255 / 0.8);
+  }
+
+  .stamp__mark {
+    position: absolute;
+    inline-size: 24px;
+    block-size: 24px;
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  /* ---------- Card 3: live status + clock ---------- */
+  .card--clock { display: grid; align-content: center; gap: 10px; min-block-size: 190px; }
+
+  .status { display: flex; align-items: center; gap: 10px; }
+
+  .status__dot {
+    position: relative;
+    flex: none;
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 999px;
+    background: var(--signal-green);
+  }
+
+  .status__dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: statusPulse 2s ease-out infinite;
+  }
+
+  @keyframes statusPulse {
+    from { transform: scale(1);   opacity: 0.6; }
+    to   { transform: scale(2.2); opacity: 0; }
+  }
+
+  .status__label {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 13px;
+    color: rgb(255 255 255 / 0.85);
+  }
+
+  .clock {
+    font-family: var(--font-accent);
+    font-weight: 700;
+    font-size: clamp(28px, 3vw, 40px);
+    line-height: 1.1;
+    color: var(--pure-white);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .clock__city {
+    font-family: var(--font-ui);
+    font-weight: 400;
+    font-size: 12px;
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  /* ---------- Card 4: terminal ---------- */
+  .term {
+    border-radius: 12px;
+    background: rgb(0 0 0 / 0.35);
+    padding: 16px;
+  }
+
+  .term__bar { display: flex; gap: 6px; margin-block-end: 12px; }
+
+  .term__dot {
+    inline-size: 12px;
+    block-size: 12px;
+    border-radius: 999px;
+    opacity: 0.6;
+  }
+
+  .term__dot--r { background: var(--term-red); }
+  .term__dot--a { background: var(--term-amber); }
+  .term__dot--g { background: var(--term-green); }
+
+  .term__body {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.6;
+    /* Exactly four lines, fixed — not min-height. Combined with `pre`
+       (never wrap), the box cannot change size as the text types, clears
+       and restarts, so the card grid never reflows. */
+    block-size: calc(4 * 1.6em);
+    white-space: pre;
+    overflow: hidden;
+  }
+
+  .term__line { display: block; }
+  .term__line--cmd { color: rgb(255 255 255 / 0.85); }
+  .term__line--ok  { color: var(--signal-green); }
+
+  .term__caret { animation: caretBlink 1.06s steps(1, end) infinite; }
+
+  @keyframes caretBlink {
+    0%, 50%   { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
+  }
+
+  /* ---------- Card 2: lo-fi music ---------- */
+  .card--music { display: grid; gap: 14px; align-content: center; }
+
+  .music__label {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .music__row { display: flex; align-items: center; gap: 18px; }
+
+  .music__btn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 999px;
+    border: 1.5px solid rgb(255 255 255 / 0.25);
+    color: var(--pure-white);
+    transition: border-color var(--dur) ease, color var(--dur) ease;
+  }
+
+  .music__btn:hover:not(:disabled) { border-color: var(--card-primary-a); }
+
+  .music__btn .music__icon--pause { display: none; }
+  .music__btn[aria-pressed="true"] .music__icon--play  { display: none; }
+  .music__btn[aria-pressed="true"] .music__icon--pause { display: inline-block; }
+
+  /* Missing audio file / no AudioContext — see cards.js */
+  .card--music.is-disabled { opacity: 0.55; }
+  .card--music.is-disabled .music__btn { pointer-events: none; }
+
+  .eq {
+    display: flex;
+    align-items: flex-end;               /* bars grow from a shared baseline */
+    gap: 5px;
+    block-size: 40px;
+  }
+
+  .eq__bar {
+    inline-size: 4px;
+    block-size: 4px;
+    border-radius: 2px;
+    background: var(--card-primary);
+  }
+
+  /* ---------- Placeholder sections ---------- */
+  .placeholder { min-block-size: 100vh; }
+  .placeholder--light { background: var(--card-secondary-light); }
+  .placeholder--dark  { background: var(--card-secondary); }
+  .placeholder--white { background: var(--pure-white); }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@layer responsive {
+
+  /* Tablet — single column, cards below the text. */
+  @media (max-width: 1023px) {
+    .hero__inner {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    .hero-sub { max-inline-size: 620px; }
+  }
+
+  /* Dots clutter narrow viewports. */
+  @media (max-width: 899px) {
+    .dots { display: none; }
+  }
+
+  @media (max-width: 767px) {
+    :root { --shell-pad: 20px; }
+
+    #hero { padding-block: 104px 56px; }
+
+    .hero__cards {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "stamp"
+        "clock"
+        "terminal"
+        "music";
+    }
+
+    .card--stamp, .card--clock { min-block-size: 0; }
+    .card--stamp { padding-block: 28px; }
+
+    .nav { padding: 16px 20px; }
+  }
+
+  /* --------------------------------------------------------------------
+     Reduced motion — case by case, never a blanket animation kill.
+     -------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .stamp__ring,
+    .status__dot::after,
+    .term__caret {
+      animation: none;
+    }
+
+    .status__dot::after { opacity: 0; }
+
+    /* The fallback gradient must be completely static. */
+    #hero.hero--css-bg { animation: none; }
+
+    .burger__line { transition: background-color 0.2s ease; }
+
+    .nav__logo-img { transition: none; }
+  }
+}
