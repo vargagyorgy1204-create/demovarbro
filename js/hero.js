@@ -94,7 +94,7 @@
      Word-morph headline
      ====================================================================== */
   var wordMorph = (function () {
-    var WORDS = ['builds', 'designs', 'codes', 'animates'];
+    var WORDS = ['builds', 'designs', 'codes'];
     if (!morph) return { start: function () {}, stop: function () {} };
 
     var current = morph.querySelector('.word');
