@@ -41,7 +41,10 @@
   --font-ui: 'Inter', 'Inter Fallback', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Mono Fallback', ui-monospace, monospace;
 
-  --shell-max: 1280px;
+  /* Grows past 1280px on wide viewports so the hero's two-column grid can
+     give the (now full-size) headline the room it needs without starving
+     the card column — see .hero__inner. Only .hero__inner consumes this. */
+  --shell-max: clamp(1280px, 99.3vw, 1520px);
   --shell-pad: 32px;
 
   /* z-index scale */
@@ -567,10 +570,13 @@
     margin-inline: auto;
     padding-inline: var(--shell-pad);
     display: grid;
-    /* minmax(0, …) drops the auto min-content floor: without it the measured
-       min-width on the morph word widens the text column and steals width
-       from the cards the moment JS sets it. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* The text column is sized to what the (now full-size, uniform) headline
+       actually needs — specifically line 3, "who " + the widest morph word
+       ("animates") — rather than an even split. Tuned and verified against
+       real canvas text metrics, not estimated; see the report for the
+       per-viewport margins this produces. The card column gets whatever's
+       left via minmax(0, 1fr). */
+    grid-template-columns: clamp(790px, 61vw, 878px) minmax(0, 1fr);
     align-items: center;
     gap: 56px;
   }
@@ -589,23 +595,11 @@
   .hero-headline {
     font-family: var(--font-display);
     font-weight: 800;
-    /* Back to near the original size — this now only sets lines 1-2
-       ("Creative"/"Developer"); line 3 gets its own, deliberately smaller
-       size below (.hero-headline__line--sub), so the two big stacked
-       words no longer have to share a font-size with the "who [morph]"
-       accent line beneath them.
-       Max reduced from 76px to 69px (as little as needed, per spec): at
-       76px "Developer" — the wider of the two words, and the one that
-       actually constrains this tier — overflowed the card column by
-       22-38px at 1440/1920px (both measured with real canvas text
-       metrics, not estimated). 69px is the largest value that clears it
-       at every one of 1024/1280/1440/1920px, and by coincidence gives an
-       identical 19px margin at three of the four: 1024px (vw-governed,
-       53.2px actual size), 1440px and 1920px (both capped flat at the
-       69px max, since --shell-max fixes the column from 1280px up and
-       5.2vw exceeds 69 at both). 1280px is the outlier with real
-       headroom (39px margin, still vw-governed at 66.6px). */
-    font-size: clamp(34px, 5.2vw, 69px);
+    /* Uniform size on all 3 lines — the two-tier compromise (big
+       Creative/Developer, smaller "who [morph]") is gone. The card
+       column now adapts to this instead of the other way around; see
+       the .hero__inner / .hero__cards rules below. */
+    font-size: clamp(34px, 5.2vw, 76px);
     line-height: 1.05;
     color: var(--pure-white);
     margin-block-end: 24px;
@@ -615,17 +609,6 @@
   /* Each of the 3 forced lines is its own block; "who" and the morph word
      share the third line's normal inline flow. */
   .hero-headline__line { display: block; }
-
-  /* Line 3 ("who" + the morphing word): a smaller accent line under the two
-     big stacked words, not a third line at equal weight. Same Syne 800 —
-     only the size changes. line-height:1.05 is inherited and unitless, so
-     it recomputes against this smaller size automatically. Verified this
-     fits next to all four morph words at 1024/1280/1440/1920px with
-     149px+ to spare (the tightest, 1024px, still clears by 149px). */
-  .hero-headline__line--sub {
-    font-size: clamp(18px, 2.6vw, 36px);
-    margin-block-start: 14px;
-  }
 
   .hero-headline__morph {
     position: relative;
@@ -688,6 +671,13 @@
   /* ---------- Right column: two rows, four elements ---------- */
   .hero__cards {
     display: grid;
+    /* Without an explicit column track, a single "auto" column grows to
+       fit its children's min-content needs and silently overflows this
+       element's own assigned width instead of respecting it — the same
+       reason .hero__inner's own columns are minmax(0, …) rather than
+       plain 1fr. Caught via real measurement: rows were rendering wider
+       than .hero__cards itself reported. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
     /* Kept for the scroll-out scatter's rotationY/rotationZ (hero.js) —
        not for hover-tilt, which no longer exists on any hero element. */
@@ -704,18 +694,32 @@
 
   .card-scatter--stamp { flex: 0 0 auto; }
   .card-scatter--player {
-    flex: 1 1 260px;
-    min-inline-size: 260px;
+    flex: 1 1 218px;
+    /* The real structural floor, after trimming the controls row's own
+       gap/button sizes and the card's horizontal padding (see .player,
+       .player__controls, .player__btn--*): 4 buttons (36+48+36+36) + 3
+       gaps (10px) = 186px, + 16px padding each side = 218px. Below this,
+       buttons start crowding. */
+    min-inline-size: 218px;
     display: grid;
   }
 
   /* Row 2 — terminal (~58%) + building card, via grid for an exact split. */
+  /* Re-tuned from 58/42: the building card's header row (uppercase label +
+     20px spinner) needs its own real minimum width to stay on one line,
+     which the old split left too little for once the overall card column
+     narrowed (see .hero__inner). Verified against real canvas text
+     metrics for both the terminal's longest line and the label. */
   .hero__row--bottom {
     display: grid;
-    grid-template-columns: minmax(0, 58%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 54%) minmax(0, 1fr);
+    gap: 10px;
   }
 
-  .card-scatter { display: grid; }
+  /* Same overflow trap as .hero__cards above: an explicit column keeps
+     this from growing past whatever width its flex/grid parent assigns it
+     to fit its child's min-content instead. */
+  .card-scatter { display: grid; grid-template-columns: minmax(0, 1fr); }
 
   .card {
     position: relative;
@@ -725,6 +729,13 @@
     border: 1px solid rgb(255 255 255 / 0.09);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Trimmed horizontal padding: part of fitting the terminal's own
+     content (plus the building card, its row-mate) into the width left
+     over after the full-size headline — see .hero__inner / .hero__row--bottom. */
+  .card--terminal {
+    padding-inline: 14px;
   }
 
   /* ---------- Stamp: standalone circular link-button ---------- */
@@ -809,7 +820,10 @@
        the row. Overrides the shared .card glass background above. */
     background: var(--player-bg);
     border-radius: 28px;
-    padding: 18px 20px;
+    /* Horizontal padding trimmed from 20px to 16px (vertical unchanged) —
+       part of closing the gap needed to fit a full-size 3-line headline
+       next to this card at 1280-1920px; see .hero__inner. */
+    padding: 18px 16px;
     display: grid;
     gap: 14px;
     align-content: center;
@@ -917,7 +931,7 @@
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--card-primary-a) 35%, transparent);
   }
 
-  .player__controls { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .player__controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
 
   .player__btn {
     flex: none;
@@ -931,8 +945,8 @@
 
   .player__btn--skip,
   .player__btn--mute {
-    inline-size: 38px;
-    block-size: 38px;
+    inline-size: 36px;
+    block-size: 36px;
     border-color: transparent;
   }
 
@@ -940,8 +954,8 @@
   .player__btn--mute:hover:not(:disabled) { background: rgb(255 255 255 / 0.08); }
 
   .player__btn--play {
-    inline-size: 52px;
-    block-size: 52px;
+    inline-size: 48px;
+    block-size: 48px;
   }
 
   .player__btn--play:hover:not(:disabled) {
@@ -968,7 +982,7 @@
     overflow: hidden;
     border-radius: 20px;
     background: rgb(0 0 0 / 0.35);
-    padding: 16px;
+    padding: 16px 12px;
   }
 
   /* Gradient top border: a plain CSS border can't take a gradient, so a
@@ -1022,13 +1036,28 @@
 
   /* ---------- "Currently building" card ---------- */
   .card--building {
-    position: relative;
-    display: grid;
-    align-content: center;
-    gap: 8px;
+    /* Same 20px as every other hero card — .card already sets this via
+       inheritance, made explicit here per spec. */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    /* .card-scatter's grid otherwise stretches this to match the taller
+       terminal card beside it, which would leave extra blank space below
+       the content instead of a genuine, measurable 20px bottom edge. */
+    align-self: start;
+  }
+
+  .building__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    inline-size: 100%;
   }
 
   .building__label {
+    /* var(--font-accent) = 'Space Grotesk' + the metric-matched fallback +
+       generic — same typeface the spec calls for, without losing the
+       CLS-safety that fallback provides. */
     font-family: var(--font-accent);
     font-weight: 500;
     font-size: 12px;
@@ -1037,15 +1066,36 @@
     color: rgb(255 255 255 / 0.55);
   }
 
+  /* Single dashed arc — a standard loading-spinner shape, not a full ring
+     and not the earlier triangle mark. */
+  .building__spinner {
+    inline-size: 20px;
+    block-size: 20px;
+    color: var(--card-primary-a);
+    animation: building-spin 1.4s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes building-spin {
+    to { transform: rotate(360deg); }
+  }
+
   .building__project {
+    /* var(--font-display) = 'Syne' + fallback + generic, matching the spec. */
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 18px;
-    padding-inline-end: 34px;   /* room for the icon */
-    /* Slow sheen sweep: mostly white, with a soft brand-tinted highlight
-       band (30% of the text's own width, since the tile is 3x that width)
-       gliding through. background-size is an exact multiple of the shift
-       distance below, so the loop is seamless — no visible restart. */
+    line-height: 1.3;
+    /* Exact 12px gap between the header row and the title, per spec. */
+    margin-block-start: 12px;
+    /* Shimmer kept exactly as implemented in the earlier pass — mostly
+       white, with a soft brand-tinted highlight band (30% of the text's
+       own width, since the tile is 3x that width) gliding through.
+       background-size is an exact multiple of the shift distance below,
+       so the loop is seamless. This means color ends up transparent (the
+       gradient shows through the clipped text), not the spec's literal
+       #fff — that #fff is exactly what reduced-motion below falls back to
+       when the shimmer is off. */
     background: linear-gradient(
       100deg,
       var(--pure-white) 0%,
@@ -1067,20 +1117,6 @@
     to   { background-position: -300% 0; }
   }
 
-  .building__icon {
-    position: absolute;
-    inset-block-start: 20px;
-    inset-inline-end: 20px;
-    inline-size: 26px;
-    block-size: 26px;
-    color: rgb(255 255 255 / 0.7);
-    animation: buildingSpin 8s linear infinite;
-  }
-
-  @keyframes buildingSpin {
-    to { transform: rotate(360deg); }
-  }
-
   /* ---------- Placeholder sections ---------- */
   .placeholder { min-block-size: 100vh; }
   .placeholder--light { background: var(--card-secondary-light); }
@@ -1094,7 +1130,19 @@
 @layer responsive {
 
   /* Tablet — single column, cards below the text. */
-  @media (max-width: 1023px) {
+  /* Raised from 1023px to 1439px: at the full, uniform headline size the
+     card column stacks below the text instead of squeezing beside it.
+     Verified via real measurement that side-by-side doesn't fit below
+     1440px — the binding constraint turned out to be row 2 (terminal +
+     building), not row 1: their genuine combined minimum (terminal's
+     longest unwrapped line + building's label-and-spinner on one line +
+     the inter-card gap) is a fixed ~395px that doesn't shrink with the
+     viewport, and at exactly 1280px the container itself is capped at the
+     viewport width regardless of --shell-max, leaving only ~366-370px —
+     short by 18-29px with no lever left to pull (the headline's own 24px
+     clearance already uses the bare minimum). 1440px+ has enough room
+     once --shell-max is allowed to grow past 1280px (see the token). */
+  @media (max-width: 1439px) {
     .hero__inner {
       grid-template-columns: 1fr;
       gap: 48px;
@@ -1139,7 +1187,7 @@
      -------------------------------------------------------------------- */
   @media (prefers-reduced-motion: reduce) {
     .stamp__ring,
-    .building__icon,
+    .building__spinner,
     .term__caret {
       animation: none;
     }

@@ -100,13 +100,13 @@
       <div class="hero__text">
         <p class="hero-eyebrow">Webfejlesztés &amp; dizájn</p>
 
-        <!-- Forced 3-line layout: "Creative" / "Developer" / "who [morph]" —
-             the first two words are the big, full-weight lines; the third
-             (--sub) is a deliberately smaller accent line underneath. -->
+        <!-- Forced 3-line layout: "Creative" / "Developer" / "who [morph]",
+             all at the same full size — the card column adapts to this
+             width, not the other way around (see hero.js / style.css). -->
         <h1 class="hero-headline">
           <span class="hero-headline__line">Creative</span>
           <span class="hero-headline__line">Developer</span>
-          <span class="hero-headline__line hero-headline__line--sub">who
+          <span class="hero-headline__line">who
             <!-- aria-live="off": the word cycles forever, so announcing every
                  swap would talk over a screen reader indefinitely. -->
             <span class="hero-headline__morph" aria-live="off"><span class="word">builds</span></span>
@@ -229,12 +229,14 @@
           <!-- "Currently building" card -->
           <div class="card-scatter card-scatter--building">
             <div class="card card--building" data-magnetic>
-              <span class="building__label">Jelenleg építem</span>
-              <span class="building__project">VarBro Motion Portfolio</span>
-              <svg class="building__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                <path d="M12 2 L21 19 L3 19 Z" stroke-linejoin="round"></path>
-                <path d="M12 9 L16.5 17 L7.5 17 Z" stroke-linejoin="round"></path>
-              </svg>
+              <div class="building__header">
+                <span class="building__label">Jelenleg építem</span>
+                <svg class="building__spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-dasharray="14 42"/>
+                </svg>
+              </div>
+              <div class="building__project">VarBro Motion Portfolio</div>
             </div>
           </div>
 
