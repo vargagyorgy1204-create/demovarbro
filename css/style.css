@@ -732,7 +732,7 @@
     position: relative;
     display: grid;
     place-items: center;
-    inline-size: clamp(120px, 12vw, 160px);
+    inline-size: clamp(90px, 9vw, 120px);
     aspect-ratio: 1;
     border-radius: 999px;
     background: var(--card-accent-warm);
