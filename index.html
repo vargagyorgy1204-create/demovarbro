@@ -100,11 +100,17 @@
       <div class="hero__text">
         <p class="hero-eyebrow">Webfejlesztés &amp; dizájn</p>
 
+        <!-- Forced 3-line layout: "Creative" / "Developer" / "who [morph]" —
+             each of the first two words gets its own block-level line, the
+             third holds "who" and the morph word together, inline. -->
         <h1 class="hero-headline">
-          <span class="hero-headline__static">Creative Developer who</span>
-          <!-- aria-live="off": the word cycles forever, so announcing every
-               swap would talk over a screen reader indefinitely. -->
-          <span class="hero-headline__morph" aria-live="off"><span class="word">builds</span></span>
+          <span class="hero-headline__line">Creative</span>
+          <span class="hero-headline__line">Developer</span>
+          <span class="hero-headline__line">who
+            <!-- aria-live="off": the word cycles forever, so announcing every
+                 swap would talk over a screen reader indefinitely. -->
+            <span class="hero-headline__morph" aria-live="off"><span class="word">builds</span></span>
+          </span>
         </h1>
 
         <p class="hero-sub">Profi webfejlesztő vagyok, aki vállalkozásoknak segít erős online jelenlétet kiépíteni — dizájn, kód és mozgás metszéspontjában.</p>

@@ -589,14 +589,26 @@
   .hero-headline {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(34px, 5.2vw, 76px);
+    /* Reduced from clamp(34px, 5.2vw, 76px): the old size worked when the
+       morph word had its own line, but forcing "who" onto the same line
+       (FIX B) means line 3 ("who " + the reserved width of the longest
+       word, "animates") has to fit beside it. At 76px it overflowed by
+       150-290px at every one of 1024/1280/1440/1920px — this clamp is the
+       largest that clears all four with real margin (verified empirically,
+       not estimated): 1024px->36.9px/32px margin, 1280px->46.1px/55px,
+       1440px and 1920px capped at 48px/33px (the column width goes flat at
+       1280px+ via --shell-max, so 1440/1920 are identical and are, with
+       1024px, the tightest of the four). */
+    font-size: clamp(34px, 3.6vw, 48px);
     line-height: 1.05;
     color: var(--pure-white);
     margin-block-end: 24px;
     text-wrap: balance;
   }
 
-  .hero-headline__static { display: block; }
+  /* Each of the 3 forced lines is its own block; "who" and the morph word
+     share the third line's normal inline flow. */
+  .hero-headline__line { display: block; }
 
   .hero-headline__morph {
     position: relative;
@@ -660,6 +672,8 @@
   .hero__cards {
     display: grid;
     gap: 16px;
+    /* Kept for the scroll-out scatter's rotationY/rotationZ (hero.js) —
+       not for hover-tilt, which no longer exists on any hero element. */
     perspective: 900px;
   }
 
@@ -694,8 +708,6 @@
     border: 1px solid rgb(255 255 255 / 0.09);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    transform-style: preserve-3d;
-    will-change: transform;
   }
 
   /* ---------- Stamp: standalone circular link-button ---------- */
@@ -715,8 +727,8 @@
     transform: scale(1.05);
   }
 
-  /* Excluded from the 3D tilt (see hero.js): its own spin + icon-swap is
-     enough interaction, and it isn't a `.card` so the tilt query skips it. */
+  /* No mousemove tilt on this (or any) hero element any more — its own
+     spin + icon-swap on hover is enough interaction. */
   .stamp__ring {
     position: absolute;
     inset: 0;
@@ -1012,8 +1024,30 @@
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 18px;
-    color: var(--pure-white);
     padding-inline-end: 34px;   /* room for the icon */
+    /* Slow sheen sweep: mostly white, with a soft brand-tinted highlight
+       band (30% of the text's own width, since the tile is 3x that width)
+       gliding through. background-size is an exact multiple of the shift
+       distance below, so the loop is seamless — no visible restart. */
+    background: linear-gradient(
+      100deg,
+      var(--pure-white) 0%,
+      var(--pure-white) 40%,
+      color-mix(in srgb, var(--card-primary-a) 55%, var(--pure-white)) 48%,
+      color-mix(in srgb, var(--card-primary-b) 55%, var(--pure-white)) 52%,
+      var(--pure-white) 60%,
+      var(--pure-white) 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: buildingShimmer 4.5s linear infinite;
+  }
+
+  @keyframes buildingShimmer {
+    from { background-position: 0% 0; }
+    to   { background-position: -300% 0; }
   }
 
   .building__icon {
@@ -1091,6 +1125,15 @@
     .building__icon,
     .term__caret {
       animation: none;
+    }
+
+    /* Fully static plain white text — not just the animation stopped, since
+       the shimmer's gradient-clip would otherwise freeze mid-sweep with
+       part of the text a permanently different (if static) tint. */
+    .building__project {
+      animation: none;
+      background: none;
+      color: var(--pure-white);
     }
 
     /* The fallback gradient must be completely static. */

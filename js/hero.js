@@ -1,6 +1,6 @@
 /* ==========================================================================
-   hero.js — entrance timeline, word-morph headline, card tilt,
-             magnetic cursor, scroll-out
+   hero.js — entrance timeline, word-morph headline, magnetic cursor,
+             scroll-out
 
    Exposes VB.hero = { play() }  — main.js calls play() when the preloader
    has faded out.
@@ -54,21 +54,12 @@
   var heroBtn   = document.querySelector('.hero__text .btn');
   var textBlock = document.querySelector('.hero__text');
   var scatters  = Array.prototype.slice.call(document.querySelectorAll('.hero__cards .card-scatter'));
-  var cards     = Array.prototype.slice.call(document.querySelectorAll('.hero__cards .card'));
   var canvas    = document.getElementById('heroCanvas');
   var morph     = document.querySelector('.hero-headline__morph');
 
   if (!hero) { VB.hero = { play: function () {} }; return; }
 
   /* --------------------------------------------------------------- helpers */
-
-  function hexToRgb(hex) {
-    var h = String(hex).trim().replace('#', '');
-    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-    var n = parseInt(h, 16);
-    if (isNaN(n)) n = 0;
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
 
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name);
@@ -238,45 +229,13 @@
   })();
 
   /* ======================================================================
-     Card 3D tilt — desktop, fine pointer, motion allowed
-     ====================================================================== */
-  function initTilt() {
-    if (!interactive) return;
-
-    var rgb = hexToRgb(cssVar('--card-primary-a'));
-    var lifted = '0 20px 45px -20px rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.5)';
-
-    cards.forEach(function (card) {
-      /* quickTo keeps per-frame writes cheap instead of spawning tweens */
-      var setRotY = gsap.quickTo(card, 'rotationY', { duration: 0.5, ease: 'power3.out' });
-      var setRotX = gsap.quickTo(card, 'rotationX', { duration: 0.5, ease: 'power3.out' });
-      var setY    = gsap.quickTo(card, 'y',         { duration: 0.5, ease: 'power3.out' });
-
-      card.addEventListener('mousemove', function (e) {
-        var r = card.getBoundingClientRect();
-        var nx = (e.clientX - r.left) / r.width;      /* 0..1 */
-        var ny = (e.clientY - r.top) / r.height;      /* 0..1 */
-        setRotY(-8 + nx * 16);                        /* -8deg .. 8deg */
-        setRotX(8 - ny * 16);                         /*  8deg .. -8deg */
-        setY(-6);
-      });
-
-      card.addEventListener('mouseenter', function () {
-        gsap.to(card, { boxShadow: lifted, duration: 0.3, ease: 'power2.out' });
-      });
-
-      card.addEventListener('mouseleave', function () {
-        gsap.to(card, {
-          rotationX: 0, rotationY: 0, y: 0,
-          boxShadow: '0 0px 0px 0px rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)',
-          duration: 0.6, ease: EASE
-        });
-      });
-    });
-  }
-
-  /* ======================================================================
      Magnetic cursor — desktop, fine pointer, motion allowed
+
+     Note: the mousemove 3D-tilt system that used to run alongside this
+     (rotateX/rotateY/lift on hover) has been removed entirely — it applied
+     to exactly four elements (stamp, music player, terminal, building
+     card) and all four are now excluded, so no tilt code is left to attach
+     to anything. This cursor effect is independent and stays as-is.
      ====================================================================== */
   function initCursor() {
     var dot = document.getElementById('cursorDot');
@@ -405,7 +364,6 @@
       defaults: { duration: 0.6, ease: EASE },
       onComplete: function () {
         wordMorph.start();     /* the morph loop starts only once this finishes */
-        initTilt();
         initCursor();
       }
     });
