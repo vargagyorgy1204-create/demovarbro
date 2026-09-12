@@ -802,8 +802,10 @@
     place-items: center;
     /* Shrunk again now that it sits in its own row above the (narrower)
        player instead of beside it — reads as a small badge, clearly
-       narrower than the player beneath it, not comparable in width. */
-    inline-size: clamp(65px, 6.5vw, 88px);
+       narrower than the player beneath it, not comparable in width.
+       Trimmed a little further (~10%) per feedback, alongside
+       .stamp__inner shrinking below. */
+    inline-size: clamp(58px, 5.8vw, 79px);
     aspect-ratio: 1;
     border-radius: 999px;
     background: var(--card-accent-warm);
@@ -832,9 +834,8 @@
   .stamp__text {
     font-family: var(--font-accent);
     font-weight: 500;
-    /* Sized (with the ring path radius, in the markup) for the narrower
-       band left once .stamp__inner grew from 30% to 70% of the diameter —
-       see the comment there. */
+    /* Sized (with the ring path radius, in the markup) for the band left
+       by .stamp__inner — now 60% of the diameter, see the comment there. */
     font-size: 12px;
     letter-spacing: 1.1px;
     fill: rgb(255 255 255 / 0.9);
@@ -843,9 +844,10 @@
   .stamp__inner {
     position: relative;
     z-index: 1;
-    /* 70% of the stamp's diameter — a slim ~30%-of-radius gradient stripe
-       remains outside it, not the near-solid disc a smaller circle left. */
-    inline-size: 70%;
+    /* 60% of the stamp's diameter (was 70%) — narrower white circle per
+       feedback, leaving a visibly wider gradient band for the rotating
+       text than before. */
+    inline-size: 60%;
     aspect-ratio: 1;
     border-radius: 999px;
     background: var(--pure-white);
@@ -861,10 +863,9 @@
   .stamp__icon { position: absolute; transition: translate 0.3s ease-in-out; }
 
   /* translate % is relative to the icon's own (fixed, 22px) box, not the
-     white circle — so growing .stamp__inner to 70% needed a bigger offset
-     here too, or the "hidden" icon no longer clears the now much larger
-     circle and both copies show at once. 260% clears its ~56px radius at
-     the desktop clamp with margin to spare. */
+     white circle. 260% clears the white circle's radius at every size
+     since .stamp__inner shrank to 60% — kept as-is; a smaller circle only
+     ever needs less clearance, never more. */
   .stamp__icon--copy { translate: -260% 260%; }
 
   .stamp:hover .stamp__icon:not(.stamp__icon--copy) { translate: 260% -260%; }
