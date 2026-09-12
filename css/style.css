@@ -802,6 +802,13 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 185px;
     gap: 10px;
+    /* Top-aligned with .hero-sub's own top line. Not a direct 1:1 offset:
+       .hero__inner's align-items: center recenters the whole (taller)
+       cards column as this margin grows, absorbing half of every px
+       added here into an upward shift of row 1 above — measured
+       empirically (two data points, slope 0.5) rather than derived from
+       the un-nudged 52px gap directly. */
+    margin-block-start: 124px;
   }
 
   /* Same overflow trap as .hero__cards above: an explicit column keeps
@@ -821,9 +828,16 @@
 
   /* Trimmed horizontal padding: part of fitting the terminal's own
      content (plus the building card, its row-mate) into the width left
-     over after the full-size headline — see .hero__inner / .hero__row--bottom. */
+     over after the full-size headline — see .hero__inner / .hero__row--bottom.
+
+     Vertical padding enlarged +20px each side (+40px total card height,
+     across two +20px passes): building matches it automatically via
+     .card-scatter's grid stretch + its own justify-content: center (see
+     .card--building), so both cards grow together without touching
+     building's own rule. */
   .card--terminal {
     padding-inline: 10px;
+    padding-block: 40px;
   }
 
   /* ---------- Stamp: standalone circular link-button ---------- */
