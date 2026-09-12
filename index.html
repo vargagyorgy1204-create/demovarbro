@@ -123,29 +123,6 @@
 
         <div class="hero__row hero__row--top">
 
-          <!-- Stamp — standalone circular link-button, not a grid card -->
-          <div class="card-scatter card-scatter--stamp">
-            <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
-              <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
-                <defs>
-                  <!-- radius 78 (of 100) centers the text within the narrower
-                       band left once the white circle grew to 70% diameter -->
-                  <path id="stampCircle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"></path>
-                </defs>
-                <text class="stamp__text">
-                  <textPath href="#stampCircle" startOffset="0">
-                    VARBRO • CREATIVE DEVELOPER • VARBRO • CREATIVE DEVELOPER •
-                  </textPath>
-                </text>
-              </svg>
-
-              <span class="stamp__inner" aria-hidden="true">
-                <i data-lucide="arrow-up-right" class="icon stamp__icon"></i>
-                <i data-lucide="arrow-up-right" class="icon stamp__icon stamp__icon--copy"></i>
-              </span>
-            </a>
-          </div>
-
           <!-- Music player -->
           <div class="card-scatter card-scatter--player">
             <article class="card player" id="musicCard" data-magnetic>
@@ -206,6 +183,29 @@
 
               <audio id="lofi" preload="metadata"></audio>
             </article>
+
+            <!-- Stamp — overlaid on the player's gradient album-art icon -->
+            <div class="card-scatter card-scatter--stamp">
+              <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
+                <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
+                  <defs>
+                    <!-- radius 78 (of 100) centers the text within the narrower
+                         band left once the white circle grew to 70% diameter -->
+                    <path id="stampCircle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"></path>
+                  </defs>
+                  <text class="stamp__text">
+                    <textPath href="#stampCircle" startOffset="0">
+                      VARBRO • CREATIVE DEVELOPER • VARBRO • CREATIVE DEVELOPER •
+                    </textPath>
+                  </text>
+                </svg>
+
+                <span class="stamp__inner" aria-hidden="true">
+                  <i data-lucide="arrow-up-right" class="icon stamp__icon"></i>
+                  <i data-lucide="arrow-up-right" class="icon stamp__icon stamp__icon--copy"></i>
+                </span>
+              </a>
+            </div>
           </div>
 
         </div><!-- /.hero__row--top -->

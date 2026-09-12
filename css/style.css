@@ -574,13 +574,14 @@
        width = 11.40 * headline-font-size + 30 (30px clearance), measured
        from real canvas text metrics of line 3 ("who " + "animates", the
        binding case — always wider than "Developer" alone). Since the
-       headline is clamp(38px, calc(7.5vw - 33px), 84px), this is that same
-       clamp linearly scaled: min = 11.40*38+30, mult = 11.40*7.5 (as a vw
-       coefficient) with the matching flat term (11.40*-33+30), max =
-       11.40*84+30 — expressed via calc() because the preferred value has
-       both a vw term and a flat additive constant, which clamp()'s middle
-       argument can't express as a bare `Nvw`. The card column gets
-       whatever's left via minmax(0, 1fr).
+       headline is clamp(41.8px, calc(8.25vw - 36.3px), 92.4px) (the whole
+       clamp scaled 10% up from clamp(38px, calc(7.5vw - 33px), 84px)),
+       this is that same clamp linearly scaled: min = 11.40*41.8+30, mult =
+       11.40*8.25 (as a vw coefficient) with the matching flat term
+       (11.40*-36.3+30), max = 11.40*92.4+30 — expressed via calc() because
+       the preferred value has both a vw term and a flat additive constant,
+       which clamp()'s middle argument can't express as a bare `Nvw`. The
+       card column gets whatever's left via minmax(0, 1fr).
 
        Re-derived after the card column's own restructure (stamp moved
        above the player instead of beside it — see .hero__row--top,
@@ -601,7 +602,7 @@
        960 remains a genuine floor per the comment below), with much more
        slack opening up from ~1280px on as the terminal's minimum plateaus
        while the shell keeps growing. */
-    grid-template-columns: clamp(463px, calc(85.5vw - 345px), 988px) minmax(0, 1fr);
+    grid-template-columns: clamp(506.5px, calc(94.05vw - 383.8px), 1083.4px) minmax(0, 1fr);
     align-items: center;
     gap: 56px;
   }
@@ -633,8 +634,13 @@
        1097-1600px range in between gets noticeably larger, since that's
        where the restructure freed up the most real slack. See
        .hero__inner's own comment for the exact re-measurement this
-       clamp (and its matching column-width clamp) is derived from. */
-    font-size: clamp(38px, calc(7.5vw - 33px), 84px);
+       clamp (and its matching column-width clamp) is derived from.
+
+       Scaled up another 10% across the board (all three clamp() terms —
+       floor, vw coefficient, and flat additive constant — multiplied by
+       1.1 together, so the curve's shape is unchanged, just 10% larger at
+       every viewport width): 38->41.8, 7.5->8.25, -33->-36.3, 84->92.4. */
+    font-size: clamp(41.8px, calc(8.25vw - 36.3px), 92.4px);
     line-height: 1.05;
     color: var(--pure-white);
     margin-block-end: 24px;
@@ -714,6 +720,9 @@
        than .hero__cards itself reported. */
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
+    /* Nudges all 4 cards down relative to the left column's headline,
+       independent of .hero__inner's own align-items: center. */
+    margin-block-start: 60px;
     /* Kept for the scroll-out scatter's rotationY/rotationZ (hero.js) —
        not for hover-tilt, which no longer exists on any hero element. */
     perspective: 900px;
@@ -724,17 +733,39 @@
     gap: 16px;
   }
 
-  /* Row 1 — stamp above the player, both left-aligned (stamp reads as a
-     small badge sitting above the player, not a side-by-side pairing any
-     more). flex-direction:column turns the shared 16px .hero__row gap
-     into the vertical gap between them — within the 12-16px spec. */
+  /* Row 1 — the player, with the stamp overlaid on its top-left corner
+     (see .card-scatter--stamp below) instead of sitting in its own row
+     above it. Right-aligned (flex-end) so the player's own right edge
+     lines up with row 2's right edge (building card, see
+     .hero__row--bottom) instead of leaving a gap at the section's edge —
+     the player is narrower than the column (see .card-scatter--player)
+     so left-alignment (the flex default before this) stranded it short
+     of the column's right edge. */
   .hero__row--top {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
   }
 
-  .card-scatter--stamp { flex: 0 0 auto; }
+  /* Stamp overlaid on the player's gradient album-art icon: absolutely
+     positioned against .card-scatter--player (below) and centered on
+     .player__art's own position — .player's fixed 13px/12px padding
+     (see .player) plus half of .player__art's fixed 50x50 size (see
+     .player__art) place that icon's center at (37px, 38px) from the
+     card's corner, constant across every breakpoint (no responsive
+     overrides on either value), so this single rule needs no media
+     queries. transform: translate(-50%, -50%) centers regardless of the
+     stamp's own clamp()'d size, so it reads as a badge stamped onto the
+     corner, bleeding outside the card's edge. */
+  .card-scatter--stamp {
+    position: absolute;
+    top: 38px;
+    left: 37px;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+
   .card-scatter--player {
+    position: relative;
     flex: 0 0 auto;
     /* Narrower than the column on purpose (see .player) — width is now
        independent of the stamp, so it's set directly as a share of the
@@ -1238,14 +1269,18 @@
 
     .hero-sub { max-inline-size: 620px; }
 
-    /* All four cards stack in one column, full width, in reading order:
-       stamp -> player -> terminal -> building. Previously this only
-       applied below 767px, so 768-1439px rendered as two 2-up rows
-       (stamp+player side by side, terminal+building side by side) instead
-       of a genuine single column — confirmed via real DOM measurement at
-       1024px. `display: contents` on the row wrappers lifts their
-       children to be direct flex items of .hero__cards, so the existing
-       DOM order becomes the stacking order with no markup change. */
+    /* The player and the terminal+building row stack in one column, full
+       width, in reading order: player (with the stamp overlaid on its
+       corner) -> terminal -> building. Previously this only applied below
+       767px, so 768-1439px rendered as two 2-up rows (stamp+player side by
+       side, terminal+building side by side) instead of a genuine single
+       column — confirmed via real DOM measurement at 1024px. `display:
+       contents` on the row wrappers lifts their children to be direct
+       flex items of .hero__cards, so the existing DOM order becomes the
+       stacking order with no markup change. The stamp itself is no longer
+       a `.hero__row` child (it's nested inside .card-scatter--player and
+       absolutely positioned — see .card-scatter--stamp above), so it's
+       unaffected by this and needs no mobile override. */
     .hero__cards {
       display: flex;
       flex-direction: column;
@@ -1254,9 +1289,6 @@
 
     .hero__row { display: contents; }
 
-    /* Column flex: the cross axis is horizontal, so centering uses
-       align-self, not justify-self (a grid-only property). */
-    .card-scatter--stamp { align-self: center; }
     /* Desktop's 54% (see .card-scatter--player) was sized for the stamp
        sitting directly above the player in its own row — irrelevant here,
        where every card stacks full-width in one column. */
