@@ -589,17 +589,23 @@
   .hero-headline {
     font-family: var(--font-display);
     font-weight: 800;
-    /* Reduced from clamp(34px, 5.2vw, 76px): the old size worked when the
-       morph word had its own line, but forcing "who" onto the same line
-       (FIX B) means line 3 ("who " + the reserved width of the longest
-       word, "animates") has to fit beside it. At 76px it overflowed by
-       150-290px at every one of 1024/1280/1440/1920px — this clamp is the
-       largest that clears all four with real margin (verified empirically,
-       not estimated): 1024px->36.9px/32px margin, 1280px->46.1px/55px,
-       1440px and 1920px capped at 48px/33px (the column width goes flat at
-       1280px+ via --shell-max, so 1440/1920 are identical and are, with
-       1024px, the tightest of the four). */
-    font-size: clamp(34px, 3.6vw, 48px);
+    /* Back to near the original size — this now only sets lines 1-2
+       ("Creative"/"Developer"); line 3 gets its own, deliberately smaller
+       size below (.hero-headline__line--sub), so the two big stacked
+       words no longer have to share a font-size with the "who [morph]"
+       accent line beneath them.
+       Max reduced from 76px to 69px (as little as needed, per spec): at
+       76px "Developer" — the wider of the two words, and the one that
+       actually constrains this tier — overflowed the card column by
+       22-38px at 1440/1920px (both measured with real canvas text
+       metrics, not estimated). 69px is the largest value that clears it
+       at every one of 1024/1280/1440/1920px, and by coincidence gives an
+       identical 19px margin at three of the four: 1024px (vw-governed,
+       53.2px actual size), 1440px and 1920px (both capped flat at the
+       69px max, since --shell-max fixes the column from 1280px up and
+       5.2vw exceeds 69 at both). 1280px is the outlier with real
+       headroom (39px margin, still vw-governed at 66.6px). */
+    font-size: clamp(34px, 5.2vw, 69px);
     line-height: 1.05;
     color: var(--pure-white);
     margin-block-end: 24px;
@@ -609,6 +615,17 @@
   /* Each of the 3 forced lines is its own block; "who" and the morph word
      share the third line's normal inline flow. */
   .hero-headline__line { display: block; }
+
+  /* Line 3 ("who" + the morphing word): a smaller accent line under the two
+     big stacked words, not a third line at equal weight. Same Syne 800 —
+     only the size changes. line-height:1.05 is inherited and unitless, so
+     it recomputes against this smaller size automatically. Verified this
+     fits next to all four morph words at 1024/1280/1440/1920px with
+     149px+ to spare (the tightest, 1024px, still clears by 149px). */
+  .hero-headline__line--sub {
+    font-size: clamp(18px, 2.6vw, 36px);
+    margin-block-start: 14px;
+  }
 
   .hero-headline__morph {
     position: relative;
