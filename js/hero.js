@@ -365,6 +365,18 @@
       onComplete: function () {
         wordMorph.start();     /* the morph loop starts only once this finishes */
         initCursor();
+        /* Must run only after scatters have actually reached their rest
+           state (y:0, scale:1, opacity:1) — initScrollOut()'s .to() tweens
+           capture their "from" value at the moment they're defined, and
+           ScrollTrigger renders a scrubbed timeline immediately on
+           creation. Calling this any earlier (e.g. right after the
+           timeline above is merely constructed, not yet complete) races
+           against the still-running entrance tween on the same
+           properties: the scroll-out timeline could capture the
+           pre-entrance hidden values (y:30, opacity:0) as its own rest
+           state instead, leaving cards stuck mid-scatter at the top of
+           the page. */
+        initScrollOut();
       }
     });
 
@@ -374,8 +386,6 @@
       .to(heroBtn,  { y: 0, opacity: 1 }, 0.3)
       /* cards overlap the text: 200ms after the headline begins */
       .to(scatters, { y: 0, scale: 1, opacity: 1, stagger: 0.09 }, 0.3);
-
-    initScrollOut();
   }
 
   VB.hero = { play: play };

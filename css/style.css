@@ -1149,23 +1149,15 @@
     }
 
     .hero-sub { max-inline-size: 620px; }
-  }
 
-  /* Dots clutter narrow viewports. */
-  @media (max-width: 899px) {
-    .dots { display: none; }
-  }
-
-  @media (max-width: 767px) {
-    :root { --shell-pad: 20px; }
-
-    #hero { padding-block: 104px 56px; }
-
-    /* Both rows collapse into one column, in reading order: stamp, player,
-       terminal, building. `display: contents` on the row wrappers lifts
-       their children to be direct flex items of .hero__cards, so the
-       existing DOM order (already stamp -> player -> terminal -> building)
-       becomes the stacking order with no markup duplication. */
+    /* All four cards stack in one column, full width, in reading order:
+       stamp -> player -> terminal -> building. Previously this only
+       applied below 767px, so 768-1439px rendered as two 2-up rows
+       (stamp+player side by side, terminal+building side by side) instead
+       of a genuine single column — confirmed via real DOM measurement at
+       1024px. `display: contents` on the row wrappers lifts their
+       children to be direct flex items of .hero__cards, so the existing
+       DOM order becomes the stacking order with no markup change. */
     .hero__cards {
       display: flex;
       flex-direction: column;
@@ -1178,6 +1170,17 @@
        align-self, not justify-self (a grid-only property). */
     .card-scatter--stamp { align-self: center; }
     .card-scatter--player { min-inline-size: 0; }
+  }
+
+  /* Dots clutter narrow viewports. */
+  @media (max-width: 899px) {
+    .dots { display: none; }
+  }
+
+  @media (max-width: 767px) {
+    :root { --shell-pad: 20px; }
+
+    #hero { padding-block: 104px 56px; }
 
     .nav { padding: 16px 20px; }
   }
