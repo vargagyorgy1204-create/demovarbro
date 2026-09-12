@@ -570,13 +570,17 @@
     margin-inline: auto;
     padding-inline: var(--shell-pad);
     display: grid;
-    /* The text column is sized to what the (now full-size, uniform) headline
-       actually needs — specifically line 3, "who " + the widest morph word
-       ("animates") — rather than an even split. Tuned and verified against
-       real canvas text metrics, not estimated; see the report for the
-       per-viewport margins this produces. The card column gets whatever's
-       left via minmax(0, 1fr). */
-    grid-template-columns: clamp(790px, 61vw, 878px) minmax(0, 1fr);
+    /* Sized to exactly track .hero-headline's own clamp() below: required
+       width = 11.40 * headline-font-size + 30 (30px clearance), measured
+       from real canvas text metrics of line 3 ("who " + "animates", the
+       binding case — always wider than "Developer" alone). Since the
+       headline is clamp(36px, 3.96vw, 76px), this is that same clamp
+       linearly scaled: min = 11.40*36+30, mult = 11.40*3.96 (as a vw
+       coefficient), max = 11.40*76+30 — expressed via calc() because the
+       preferred value has both a vw term and a flat additive constant,
+       which clamp()'s middle argument can't express as a bare `Nvw`. The
+       card column gets whatever's left via minmax(0, 1fr). */
+    grid-template-columns: clamp(440px, calc(30px + 45.1vw), 896px) minmax(0, 1fr);
     align-items: center;
     gap: 56px;
   }
@@ -595,11 +599,15 @@
   .hero-headline {
     font-family: var(--font-display);
     font-weight: 800;
-    /* Uniform size on all 3 lines — the two-tier compromise (big
-       Creative/Developer, smaller "who [morph]") is gone. The card
-       column now adapts to this instead of the other way around; see
-       the .hero__inner / .hero__cards rules below. */
-    font-size: clamp(34px, 5.2vw, 76px);
+    /* Uniform size on all 3 lines. Scales down further at narrow widths
+       than earlier (36px floor vs 34px before) so side-by-side cards can
+       work all the way down to 960px logical width — a large share of
+       real desktop visitors run Windows display scaling (125-200%) on
+       1920x1080 monitors, which produces logical widths as low as
+       ~1097px, not just genuinely narrow windows. The card column adapts
+       to whatever this needs; see .hero__inner below, which tracks this
+       exact clamp. */
+    font-size: clamp(36px, 3.96vw, 76px);
     line-height: 1.05;
     color: var(--pure-white);
     margin-block-end: 24px;
@@ -694,25 +702,25 @@
 
   .card-scatter--stamp { flex: 0 0 auto; }
   .card-scatter--player {
-    flex: 1 1 218px;
+    flex: 1 1 186px;
     /* The real structural floor, after trimming the controls row's own
        gap/button sizes and the card's horizontal padding (see .player,
-       .player__controls, .player__btn--*): 4 buttons (36+48+36+36) + 3
-       gaps (10px) = 186px, + 16px padding each side = 218px. Below this,
+       .player__controls, .player__btn--*): 4 buttons (32+42+32+32) + 3
+       gaps (8px) = 162px, + 12px padding each side = 186px. Below this,
        buttons start crowding. */
-    min-inline-size: 218px;
+    min-inline-size: 186px;
     display: grid;
   }
 
-  /* Row 2 — terminal (~58%) + building card, via grid for an exact split. */
-  /* Re-tuned from 58/42: the building card's header row (uppercase label +
-     20px spinner) needs its own real minimum width to stay on one line,
-     which the old split left too little for once the overall card column
-     narrowed (see .hero__inner). Verified against real canvas text
-     metrics for both the terminal's longest line and the label. */
+  /* Row 2 — terminal + building card. Building's content (a fixed
+     uppercase label + a 20px spinner) never changes with viewport width,
+     so rather than a percentage split (which has to be re-tuned every
+     time the overall card column's width changes — as it now does a lot,
+     across 960-1920px), building gets a flat width sized to its own real
+     minimum and terminal absorbs whatever's left via minmax(0, 1fr). */
   .hero__row--bottom {
     display: grid;
-    grid-template-columns: minmax(0, 54%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 185px;
     gap: 10px;
   }
 
@@ -735,7 +743,7 @@
      content (plus the building card, its row-mate) into the width left
      over after the full-size headline — see .hero__inner / .hero__row--bottom. */
   .card--terminal {
-    padding-inline: 14px;
+    padding-inline: 10px;
   }
 
   /* ---------- Stamp: standalone circular link-button ---------- */
@@ -820,10 +828,10 @@
        the row. Overrides the shared .card glass background above. */
     background: var(--player-bg);
     border-radius: 28px;
-    /* Horizontal padding trimmed from 20px to 16px (vertical unchanged) —
+    /* Horizontal padding trimmed from 20px to 12px (vertical unchanged) —
        part of closing the gap needed to fit a full-size 3-line headline
-       next to this card at 1280-1920px; see .hero__inner. */
-    padding: 18px 16px;
+       next to this card down to 960px; see .hero__inner. */
+    padding: 18px 12px;
     display: grid;
     gap: 14px;
     align-content: center;
@@ -931,7 +939,7 @@
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--card-primary-a) 35%, transparent);
   }
 
-  .player__controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .player__controls { display: flex; align-items: center; justify-content: center; gap: 8px; }
 
   .player__btn {
     flex: none;
@@ -945,8 +953,8 @@
 
   .player__btn--skip,
   .player__btn--mute {
-    inline-size: 36px;
-    block-size: 36px;
+    inline-size: 32px;
+    block-size: 32px;
     border-color: transparent;
   }
 
@@ -954,8 +962,8 @@
   .player__btn--mute:hover:not(:disabled) { background: rgb(255 255 255 / 0.08); }
 
   .player__btn--play {
-    inline-size: 48px;
-    block-size: 48px;
+    inline-size: 42px;
+    block-size: 42px;
   }
 
   .player__btn--play:hover:not(:disabled) {
@@ -982,7 +990,11 @@
     overflow: hidden;
     border-radius: 20px;
     background: rgb(0 0 0 / 0.35);
-    padding: 16px 12px;
+    /* Horizontal trimmed further (12px -> 8px) — part of fitting the
+       longest terminal line into the width available at 960px, where the
+       building card next to it (fixed-width, already at its own bare
+       minimum) can't give up any more room. */
+    padding: 16px 8px;
   }
 
   /* Gradient top border: a plain CSS border can't take a gradient, so a
@@ -1013,7 +1025,11 @@
   .term__body {
     font-family: var(--font-mono);
     font-weight: 400;
-    font-size: 13px;
+    /* Responsive: shrinks the longest line's required width at the
+       narrowest checkpoints (960-1280px) where the card column is
+       tightest, without affecting the already-comfortable 1440px+ range
+       (font is already at its 13px ceiling by ~1150px viewport width). */
+    font-size: clamp(10px, 1.04vw, 13px);
     line-height: 1.6;
     /* Exactly four lines, fixed — not min-height. Combined with `pre`
        (never wrap), the box cannot change size as the text types, clears
@@ -1129,20 +1145,23 @@
    -------------------------------------------------------------------------- */
 @layer responsive {
 
-  /* Tablet — single column, cards below the text. */
-  /* Raised from 1023px to 1439px: at the full, uniform headline size the
-     card column stacks below the text instead of squeezing beside it.
-     Verified via real measurement that side-by-side doesn't fit below
-     1440px — the binding constraint turned out to be row 2 (terminal +
-     building), not row 1: their genuine combined minimum (terminal's
-     longest unwrapped line + building's label-and-spinner on one line +
-     the inter-card gap) is a fixed ~395px that doesn't shrink with the
-     viewport, and at exactly 1280px the container itself is capped at the
-     viewport width regardless of --shell-max, leaving only ~366-370px —
-     short by 18-29px with no lever left to pull (the headline's own 24px
-     clearance already uses the bare minimum). 1440px+ has enough room
-     once --shell-max is allowed to grow past 1280px (see the token). */
-  @media (max-width: 1439px) {
+  /* Tablet/mobile — single column, cards below the text. */
+  /* Lowered from 1439px to 959px: a large share of real desktop visitors
+     run Windows display scaling (125-200%) on 1920x1080 monitors, which
+     produces logical CSS widths as low as ~1097px — the OLD 1440px
+     breakpoint pushed that whole common, ordinary desktop setup into the
+     stacked/mobile-style layout. Getting side-by-side to genuinely work
+     down to 960px took three changes together: the headline's own clamp
+     floor dropped (36px vs 34px, scaling down further at narrow widths —
+     see .hero-headline), row 2 changed from a percentage split to a flat
+     185px for the building card (its content never scales with viewport)
+     + minmax(0, 1fr) for the terminal, and the music player's buttons/
+     gaps/padding were trimmed further (see .player__btn--*,
+     .player__controls, .player). 960px is a genuine floor, not an
+     arbitrary cut-off: below it there is no combination of these levers
+     left that keeps every card usable — verified across 9 checkpoints
+     from 960px to 1920px, see the report. */
+  @media (max-width: 959px) {
     .hero__inner {
       grid-template-columns: 1fr;
       gap: 48px;
