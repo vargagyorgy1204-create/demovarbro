@@ -574,13 +574,34 @@
        width = 11.40 * headline-font-size + 30 (30px clearance), measured
        from real canvas text metrics of line 3 ("who " + "animates", the
        binding case — always wider than "Developer" alone). Since the
-       headline is clamp(36px, 3.96vw, 76px), this is that same clamp
-       linearly scaled: min = 11.40*36+30, mult = 11.40*3.96 (as a vw
-       coefficient), max = 11.40*76+30 — expressed via calc() because the
-       preferred value has both a vw term and a flat additive constant,
-       which clamp()'s middle argument can't express as a bare `Nvw`. The
-       card column gets whatever's left via minmax(0, 1fr). */
-    grid-template-columns: clamp(440px, calc(30px + 45.1vw), 896px) minmax(0, 1fr);
+       headline is clamp(38px, calc(7.5vw - 33px), 84px), this is that same
+       clamp linearly scaled: min = 11.40*38+30, mult = 11.40*7.5 (as a vw
+       coefficient) with the matching flat term (11.40*-33+30), max =
+       11.40*84+30 — expressed via calc() because the preferred value has
+       both a vw term and a flat additive constant, which clamp()'s middle
+       argument can't express as a bare `Nvw`. The card column gets
+       whatever's left via minmax(0, 1fr).
+
+       Re-derived after the card column's own restructure (stamp moved
+       above the player instead of beside it — see .hero__row--top,
+       .stamp, .player): that dropped the column's real minimum width
+       requirement, which used to be set by fitting stamp+player side by
+       side and is now set by the terminal+building row instead (row 1
+       only needs the player's own 186px floor now). Re-measured via real
+       DOM min-content widths (a hidden probe span using the terminal's
+       own computed font, injected per checkpoint — not eyeballed) at
+       each of 960/1097/1152/1280/1366/1440/1536/1600/1920px: the
+       binding minimum is building's fixed 185px + 10px gap + the
+       terminal's actual min-content width for its longest line ("$ git
+       push origin main"), which itself shrinks with the terminal's own
+       responsive font-size clamp down to 152px at 960px and plateaus at
+       192px from ~1280px on (font hits its 13px ceiling there). This
+       clamp is fitted to leave ~15px of slack above that measured floor
+       at every checkpoint — tightest at 960px (~3-5px real margin, since
+       960 remains a genuine floor per the comment below), with much more
+       slack opening up from ~1280px on as the terminal's minimum plateaus
+       while the shell keeps growing. */
+    grid-template-columns: clamp(463px, calc(85.5vw - 345px), 988px) minmax(0, 1fr);
     align-items: center;
     gap: 56px;
   }
@@ -599,15 +620,21 @@
   .hero-headline {
     font-family: var(--font-display);
     font-weight: 800;
-    /* Uniform size on all 3 lines. Scales down further at narrow widths
-       than earlier (36px floor vs 34px before) so side-by-side cards can
-       work all the way down to 960px logical width — a large share of
-       real desktop visitors run Windows display scaling (125-200%) on
-       1920x1080 monitors, which produces logical widths as low as
-       ~1097px, not just genuinely narrow windows. The card column adapts
-       to whatever this needs; see .hero__inner below, which tracks this
-       exact clamp. */
-    font-size: clamp(36px, 3.96vw, 76px);
+    /* Uniform size on all 3 lines. Floor kept at 960px logical width — a
+       large share of real desktop visitors run Windows display scaling
+       (125-200%) on 1920x1080 monitors, which produces logical widths as
+       low as ~1097px, not just genuinely narrow windows.
+
+       Enlarged from clamp(36px, 3.96vw, 76px) now that the card column
+       (see .hero__inner) needs much less width than before the stamp
+       moved above the player: the 960px floor only grows 36px -> 38px
+       (960 stays the genuine tight checkpoint, ~3-5px of real margin
+       left there), but the ceiling grows 76px -> 84px and the whole
+       1097-1600px range in between gets noticeably larger, since that's
+       where the restructure freed up the most real slack. See
+       .hero__inner's own comment for the exact re-measurement this
+       clamp (and its matching column-width clamp) is derived from. */
+    font-size: clamp(38px, calc(7.5vw - 33px), 84px);
     line-height: 1.05;
     color: var(--pure-white);
     margin-block-end: 24px;
@@ -697,17 +724,39 @@
     gap: 16px;
   }
 
-  /* Row 1 — stamp (fixed) + music player (fills the rest). */
-  .hero__row--top { align-items: stretch; }
+  /* Row 1 — stamp above the player, both left-aligned (stamp reads as a
+     small badge sitting above the player, not a side-by-side pairing any
+     more). flex-direction:column turns the shared 16px .hero__row gap
+     into the vertical gap between them — within the 12-16px spec. */
+  .hero__row--top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
   .card-scatter--stamp { flex: 0 0 auto; }
   .card-scatter--player {
-    flex: 1 1 186px;
+    flex: 0 0 auto;
+    /* Narrower than the column on purpose (see .player) — width is now
+       independent of the stamp, so it's set directly as a share of the
+       card column rather than "fills what the stamp left over".
+
+       clamp() floor, not a flat 54%: a blind percentage of the column
+       shrinks along with it as the headline clamp below grows (see
+       .hero__inner), and by ~260px wide the title/artist text (fixed
+       15px/11px, not responsive) starts ellipsis-truncating hard —
+       measured via each string's real text width, not eyeballed:
+       "Lo-fi Coding Mix" needs ~119px, comfortably inside a ~250px
+       total row (art + gap + text + gap + eq + padding). 60% only
+       actually applies once the column is wide enough for it to exceed
+       that floor (from roughly the 1440px+ checkpoints on); at every
+       narrower one the floor wins and the title stays fully readable. */
+    inline-size: clamp(260px, 60%, 340px);
     /* The real structural floor, after trimming the controls row's own
        gap/button sizes and the card's horizontal padding (see .player,
        .player__controls, .player__btn--*): 4 buttons (32+42+32+32) + 3
-       gaps (8px) = 162px, + 12px padding each side = 186px. Below this,
-       buttons start crowding. */
+       gaps (8px) = 162px, + 12px padding each side = 186px. Kept as a
+       secondary safety net — the clamp's own 260px floor above already
+       clears it with room to spare. */
     min-inline-size: 186px;
     display: grid;
   }
@@ -751,7 +800,10 @@
     position: relative;
     display: grid;
     place-items: center;
-    inline-size: clamp(90px, 9vw, 120px);
+    /* Shrunk again now that it sits in its own row above the (narrower)
+       player instead of beside it — reads as a small badge, clearly
+       narrower than the player beneath it, not comparable in width. */
+    inline-size: clamp(65px, 6.5vw, 88px);
     aspect-ratio: 1;
     border-radius: 999px;
     background: var(--card-accent-warm);
@@ -828,12 +880,24 @@
        the row. Overrides the shared .card glass background above. */
     background: var(--player-bg);
     border-radius: 28px;
-    /* Horizontal padding trimmed from 20px to 12px (vertical unchanged) —
-       part of closing the gap needed to fit a full-size 3-line headline
-       next to this card down to 960px; see .hero__inner. */
-    padding: 18px 12px;
+    /* Vertical padding trimmed further (18px -> 13px) and the row gap
+       tightened (14px -> 11px) — together with .player__art shrinking
+       below, this is most of the ~13% height reduction now that the card
+       is narrower and no longer needs to fill the row beside the stamp. */
+    padding: 13px 12px;
     display: grid;
-    gap: 14px;
+    /* Same overflow trap as .hero__cards/.card-scatter elsewhere in this
+       file: without an explicit column, the implicit "auto" track sizes
+       to a child's own max-content contribution rather than the
+       container's own width — .player__controls (a centered flex row)
+       was quietly ~30px wider than its own buttons, which the old,
+       wider player always had room to absorb invisibly. Now that the
+       player is deliberately narrower (see .card-scatter--player), that
+       invisible slack pushed .player__controls past the card's own
+       right edge. Caught via real getBoundingClientRect measurement,
+       not visually — nothing was clipped or misaligned on screen. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 11px;
     align-content: center;
   }
 
@@ -841,9 +905,10 @@
 
   .player__art {
     flex: none;
-    inline-size: 56px;
-    block-size: 56px;
-    border-radius: 14px;
+    /* Shrunk with the player's own height reduction. */
+    inline-size: 50px;
+    block-size: 50px;
+    border-radius: 13px;
     background: var(--card-primary);
     color: var(--pure-white);
     display: grid;
@@ -1057,10 +1122,13 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    /* .card-scatter's grid otherwise stretches this to match the taller
-       terminal card beside it, which would leave extra blank space below
-       the content instead of a genuine, measurable 20px bottom edge. */
-    align-self: start;
+    /* Now deliberately matches the terminal's height instead of its own
+       content height: .card-scatter's grid stretches this by default
+       (no more align-self:start override), and justify-content:center
+       keeps the label+spinner/title pair centered in the extra vertical
+       space that stretch creates rather than left top-aligned with dead
+       space below. */
+    justify-content: center;
   }
 
   .building__header {
@@ -1188,7 +1256,10 @@
     /* Column flex: the cross axis is horizontal, so centering uses
        align-self, not justify-self (a grid-only property). */
     .card-scatter--stamp { align-self: center; }
-    .card-scatter--player { min-inline-size: 0; }
+    /* Desktop's 54% (see .card-scatter--player) was sized for the stamp
+       sitting directly above the player in its own row — irrelevant here,
+       where every card stacks full-width in one column. */
+    .card-scatter--player { inline-size: auto; min-inline-size: 0; }
   }
 
   /* Dots clutter narrow viewports. */
