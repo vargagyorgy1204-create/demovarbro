@@ -139,15 +139,14 @@
     }
     window.addEventListener('resize', debounce(measure, 150));
 
-    /* ---- shared setup for both enter and exit: split a word into letters,
-       each sitting inside its own overflow-hidden mask so it can't ghost
-       past its resting position mid-animation, and offset each letter's
-       background-clip:text gradient so the per-character slices reconstruct
-       ONE continuous gradient across the word instead of one gradient per
-       letter (neither the mask nor the character carries its own
-       background/color otherwise). */
-    function splitChars(el) {
-      var split = new SplitText(el, { type: 'chars', charsClass: 'wm-char' });
+    /* ---- enter: each letter climbs up into view from below, left to right.
+       Every character sits inside its own overflow-hidden mask so it can't
+       ghost above its resting position mid-animation; neither the mask nor
+       the character carries its own background/color, so the ancestor
+       .word's gradient-clipped-to-text paints straight through all of them
+       as one continuous gradient rather than one gradient per letter. */
+    function enterWord(incoming) {
+      var split = new SplitText(incoming, { type: 'chars', charsClass: 'wm-char' });
 
       split.chars.forEach(function (charEl) {
         var mask = document.createElement('span');
@@ -156,9 +155,13 @@
         mask.appendChild(charEl);
       });
 
-      /* Measured before any yPercent transform (which only moves things
-         vertically, but measuring first keeps this unambiguous). */
-      var wordRect = el.getBoundingClientRect();
+      /* Each char's own background-clip:text needs the SAME gradient sized
+         to the whole word and offset by that char's own position, so the
+         per-character slices reconstruct one continuous gradient instead of
+         each glyph getting its own independent one. Measured before the
+         yPercent transform below (which only moves things vertically, but
+         measuring first keeps this unambiguous). */
+      var wordRect = incoming.getBoundingClientRect();
       var wordWidth = wordRect.width;
       split.chars.forEach(function (charEl) {
         var charRect = charEl.getBoundingClientRect();
@@ -166,13 +169,6 @@
         charEl.style.backgroundSize = wordWidth + 'px 100%';
         charEl.style.backgroundPosition = (-offsetX) + 'px 0';
       });
-
-      return split;
-    }
-
-    /* ---- enter: each letter climbs up into view from below, left to right. */
-    function enterWord(incoming) {
-      var split = splitChars(incoming);
 
       gsap.set(split.chars, { yPercent: 100, opacity: 0 });
 
@@ -185,25 +181,8 @@
       });
     }
 
-    /* ---- exit: mirror image of the enter — each letter climbs up and out
-       of its mask, left to right, same duration/stagger/ease. The element
-       is discarded right after, so there's no plain text to revert back to
-       (unlike enterWord, which keeps its word around). */
-    function exitWord(outgoing, onDone) {
-      var split = splitChars(outgoing);
-
-      gsap.to(split.chars, {
-        yPercent: -100, opacity: 0,
-        duration: 0.45, ease: EASE, stagger: 0.028,
-        onComplete: function () {
-          if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
-          onDone();
-        }
-      });
-    }
-
-    /* ---- the cycle: outgoing word's letters climb out, THEN (not
-       overlapping) the incoming word's letters climb in. ---- */
+    /* ---- the cycle: outgoing word fades/blurs out as a whole, THEN (not
+       overlapping) the incoming word's letters stagger in. ---- */
     function swap() {
       idx = (idx + 1) % WORDS.length;
       var next = WORDS[idx];
@@ -222,7 +201,14 @@
       }
 
       if (outgoing) {
-        exitWord(outgoing, startEnter);
+        gsap.to(outgoing, {
+          opacity: 0, filter: 'blur(6px)', y: '-0.3em',
+          duration: 0.25, ease: EASE,
+          onComplete: function () {
+            if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
+            startEnter();
+          }
+        });
       } else {
         startEnter();
       }
