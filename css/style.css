@@ -674,20 +674,14 @@
     color: transparent;
   }
 
-  /* Per-character reveal mask (FIX 2): each incoming letter sits inside an
-     overflow-hidden box so it climbs into view instead of ghosting above its
-     resting position. background-clip:text does NOT reach through nested
-     elements — a descendant paints its own box independently of an
-     ancestor's clipped background — so each char needs the same gradient
-     declaration again. hero.js sets background-size/-position per character
-     (to the full word's width, offset by that char's own position) so the
-     slices line up into one continuous gradient rather than one per glyph. */
-  .hero-headline__morph .wm-mask {
-    display: inline-block;
-    overflow: hidden;
-    vertical-align: top;
-  }
-
+  /* Per-character gradient (FIX 2): background-clip:text does NOT reach
+     through nested elements — a descendant paints its own box independently
+     of an ancestor's clipped background — so each flying/tumbling letter
+     needs the same gradient declaration again. hero.js sets
+     background-size/-position per character (to the full word's width,
+     offset by that char's own resting position) so the slices line up into
+     one continuous gradient rather than one per glyph, regardless of where
+     the letter is mid-flight. */
   .hero-headline__morph .wm-char {
     display: inline-block;
     vertical-align: top;

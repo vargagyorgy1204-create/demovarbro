@@ -139,25 +139,18 @@
     }
     window.addEventListener('resize', debounce(measure, 150));
 
-    /* ---- shared setup for both enter and exit: split a word into letters,
-       each sitting inside its own overflow-hidden mask so it can't ghost
-       past its resting position mid-animation, and offset each letter's
-       background-clip:text gradient so the per-character slices reconstruct
-       ONE continuous gradient across the word instead of one gradient per
-       letter (neither the mask nor the character carries its own
-       background/color otherwise). */
+    /* ---- shared setup for both enter and exit: split a word into letters
+       and offset each letter's background-clip:text gradient so the
+       per-character slices reconstruct ONE continuous gradient across the
+       word instead of one gradient per letter (the character carries no
+       background/color of its own otherwise). No overflow-hidden mask here
+       — letters fly to/from off-position, rotated, so a tight mask box
+       would clip them mid-flight. */
     function splitChars(el) {
       var split = new SplitText(el, { type: 'chars', charsClass: 'wm-char' });
 
-      split.chars.forEach(function (charEl) {
-        var mask = document.createElement('span');
-        mask.className = 'wm-mask';
-        charEl.parentNode.insertBefore(mask, charEl);
-        mask.appendChild(charEl);
-      });
-
-      /* Measured before any yPercent transform (which only moves things
-         vertically, but measuring first keeps this unambiguous). */
+      /* Measured before any transform (position/rotation only move things
+         visually, but measuring first keeps this unambiguous). */
       var wordRect = el.getBoundingClientRect();
       var wordWidth = wordRect.width;
       split.chars.forEach(function (charEl) {
@@ -170,31 +163,48 @@
       return split;
     }
 
-    /* ---- enter: each letter climbs up into view from below, left to right. */
+    function rand(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    /* ---- enter: letters fly in from scattered, rotated positions and
+       tumble into place — each one independently, arriving in a random
+       order rather than left to right. */
     function enterWord(incoming) {
       var split = splitChars(incoming);
 
-      gsap.set(split.chars, { yPercent: 100, opacity: 0 });
+      gsap.set(split.chars, {
+        xPercent: function () { return rand(-140, 140); },
+        yPercent: function () { return rand(-160, 160); },
+        rotation: function () { return rand(-85, 85); },
+        opacity: 0
+      });
 
       gsap.to(split.chars, {
-        yPercent: 0, opacity: 1,
-        duration: 0.45, ease: EASE, stagger: 0.028,
+        xPercent: 0, yPercent: 0, rotation: 0, opacity: 1,
+        duration: 0.7, ease: EASE,
+        stagger: { each: 0.045, from: 'random' },
         onComplete: function () {
           split.revert();   /* settle back to plain text once fully in */
         }
       });
     }
 
-    /* ---- exit: mirror image of the enter — each letter climbs up and out
-       of its mask, left to right, same duration/stagger/ease. The element
-       is discarded right after, so there's no plain text to revert back to
-       (unlike enterWord, which keeps its word around). */
+    /* ---- exit: mirror image of the enter — letters tumble apart to fresh
+       scattered, rotated positions (not retracing the enter's path) in a
+       random order. The element is discarded right after, so there's no
+       plain text to revert back to (unlike enterWord, which keeps its word
+       around). */
     function exitWord(outgoing, onDone) {
       var split = splitChars(outgoing);
 
       gsap.to(split.chars, {
-        yPercent: -100, opacity: 0,
-        duration: 0.45, ease: EASE, stagger: 0.028,
+        xPercent: function () { return rand(-140, 140); },
+        yPercent: function () { return rand(-160, 160); },
+        rotation: function () { return rand(-85, 85); },
+        opacity: 0,
+        duration: 0.55, ease: EASE,
+        stagger: { each: 0.04, from: 'random' },
         onComplete: function () {
           if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
           onDone();
@@ -202,8 +212,8 @@
       });
     }
 
-    /* ---- the cycle: outgoing word's letters climb out, THEN (not
-       overlapping) the incoming word's letters climb in. ---- */
+    /* ---- the cycle: outgoing word's letters scatter apart, THEN (not
+       overlapping) the incoming word's letters tumble in. ---- */
     function swap() {
       idx = (idx + 1) % WORDS.length;
       var next = WORDS[idx];
