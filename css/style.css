@@ -44,7 +44,7 @@
   /* Grows past 1280px on wide viewports so the hero's two-column grid can
      give the (now full-size) headline the room it needs without starving
      the card column — see .hero__inner. Only .hero__inner consumes this. */
-  --shell-max: clamp(1280px, 99.3vw, 1520px);
+  --shell-max: clamp(1280px, 99.3vw, 1680px);
   --shell-pad: 32px;
 
   /* z-index scale */
@@ -802,6 +802,14 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 185px;
     gap: 10px;
+    /* Widens the row 48px into the headline gap (see .hero__inner's own
+       56px column gap — capped 8px short of it so this never touches the
+       headline's own box) instead of past the section's right edge — the
+       terminal (this row's 1fr column) absorbs it, building stays put in
+       both size and position since justify-self: end anchors the row's
+       right edge exactly where it already sits. */
+    inline-size: calc(100% + 48px);
+    justify-self: end;
     /* Top-aligned with .hero-sub's own top line. Not a direct 1:1 offset:
        .hero__inner's align-items: center recenters the whole (taller)
        cards column as this margin grows, absorbing half of every px
@@ -1136,11 +1144,15 @@
   .term__body {
     font-family: var(--font-mono);
     font-weight: 400;
-    /* Responsive: shrinks the longest line's required width at the
-       narrowest checkpoints (960-1280px) where the card column is
-       tightest, without affecting the already-comfortable 1440px+ range
-       (font is already at its 13px ceiling by ~1150px viewport width). */
-    font-size: clamp(10px, 1.04vw, 13px);
+    /* Flattened to a flat 10px (was a responsive clamp up to 13px):
+       measured that the 10% headline enlargement elsewhere in
+       .hero__inner shrank the cards column at every desktop width, and
+       shrinks it hardest at the ~1600-1920px plateau where .hero__inner's
+       own shell-max and the headline's clamp both saturate together —
+       even after widening this row 48px (see .hero__row--bottom), "$ git
+       push origin main" (the longest line) only fits there, without
+       clipping, at the same size the narrowest checkpoints already used. */
+    font-size: 10px;
     line-height: 1.6;
     /* Exactly four lines, fixed — not min-height. Combined with `pre`
        (never wrap), the box cannot change size as the text types, clears
