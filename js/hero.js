@@ -187,7 +187,7 @@
 
       gsap.to(split.chars, {
         yPercent: 0, rotation: 0, opacity: 1,
-        duration: 0.32, ease: EASE, stagger: 0.3,
+        duration: 0.24, ease: EASE, stagger: 0.22,
         onComplete: function () {
           split.revert();   /* settle back to plain text once fully in */
           if (onDone) onDone();
@@ -205,7 +205,7 @@
         yPercent: function () { return rand(-70, 70); },
         rotation: function () { return rand(-130, 130); },
         opacity: 0,
-        duration: 0.28, ease: EASE, stagger: 0.24,
+        duration: 0.2, ease: EASE, stagger: 0.17,
         onComplete: function () {
           if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
           onDone();
