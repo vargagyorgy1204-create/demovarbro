@@ -139,29 +139,21 @@
     }
     window.addEventListener('resize', debounce(measure, 150));
 
-    /* ---- enter: each letter climbs up into view from below, left to right.
-       Every character sits inside its own overflow-hidden mask so it can't
-       ghost above its resting position mid-animation; neither the mask nor
-       the character carries its own background/color, so the ancestor
-       .word's gradient-clipped-to-text paints straight through all of them
-       as one continuous gradient rather than one gradient per letter. */
-    function enterWord(incoming) {
-      var split = new SplitText(incoming, { type: 'chars', charsClass: 'wm-char' });
+    var PAUSE_MS = 900;   /* how long a fully-assembled word holds before the next cycle */
 
-      split.chars.forEach(function (charEl) {
-        var mask = document.createElement('span');
-        mask.className = 'wm-mask';
-        charEl.parentNode.insertBefore(mask, charEl);
-        mask.appendChild(charEl);
-      });
+    /* ---- shared setup for both enter and exit: split a word into letters
+       and offset each letter's background-clip:text gradient so the
+       per-character slices reconstruct ONE continuous gradient across the
+       word instead of one gradient per letter (the character carries no
+       background/color of its own otherwise). No overflow-hidden mask here
+       — letters spin past their own box's edges mid-flight, which a snug
+       mask would clip. */
+    function splitChars(el) {
+      var split = new SplitText(el, { type: 'chars', charsClass: 'wm-char' });
 
-      /* Each char's own background-clip:text needs the SAME gradient sized
-         to the whole word and offset by that char's own position, so the
-         per-character slices reconstruct one continuous gradient instead of
-         each glyph getting its own independent one. Measured before the
-         yPercent transform below (which only moves things vertically, but
-         measuring first keeps this unambiguous). */
-      var wordRect = incoming.getBoundingClientRect();
+      /* Measured before any transform (position/rotation only move things
+         visually, but measuring first keeps this unambiguous). */
+      var wordRect = el.getBoundingClientRect();
       var wordWidth = wordRect.width;
       split.chars.forEach(function (charEl) {
         var charRect = charEl.getBoundingClientRect();
@@ -170,19 +162,63 @@
         charEl.style.backgroundPosition = (-offsetX) + 'px 0';
       });
 
-      gsap.set(split.chars, { yPercent: 100, opacity: 0 });
+      return split;
+    }
+
+    function rand(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    /* ---- enter: letters build the word up one at a time, left to right —
+       each drops in with a short spin. stagger's default (ordered) walk
+       through split.chars already goes left to right, and a stagger gap
+       roughly matching each letter's own duration means one letter settles
+       before the next starts moving, so the already-built prefix stays put
+       while exactly one letter is ever mid-flight. onDone fires once the
+       whole word is fully assembled (used to schedule the next cycle). */
+    function enterWord(incoming, onDone) {
+      var split = splitChars(incoming);
+
+      gsap.set(split.chars, {
+        yPercent: function () { return rand(-70, 70); },
+        rotation: function () { return rand(-130, 130); },
+        opacity: 0
+      });
 
       gsap.to(split.chars, {
-        yPercent: 0, opacity: 1,
-        duration: 0.45, ease: EASE, stagger: 0.028,
+        yPercent: 0, rotation: 0, opacity: 1,
+        duration: 0.32, ease: EASE, stagger: 0.3,
         onComplete: function () {
           split.revert();   /* settle back to plain text once fully in */
+          if (onDone) onDone();
         }
       });
     }
 
-    /* ---- the cycle: outgoing word fades/blurs out as a whole, THEN (not
-       overlapping) the incoming word's letters stagger in. ---- */
+    /* ---- exit: mirror of the enter — letters disappear one at a time,
+       left to right, with the same kind of spin, before the element is
+       discarded (no plain text to revert back to, unlike enterWord). */
+    function exitWord(outgoing, onDone) {
+      var split = splitChars(outgoing);
+
+      gsap.to(split.chars, {
+        yPercent: function () { return rand(-70, 70); },
+        rotation: function () { return rand(-130, 130); },
+        opacity: 0,
+        duration: 0.28, ease: EASE, stagger: 0.24,
+        onComplete: function () {
+          if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
+          onDone();
+        }
+      });
+    }
+
+    /* ---- the cycle: outgoing word's letters disappear one by one, THEN
+       (not overlapping) the incoming word's letters build up one by one.
+       The next cycle is scheduled only once the incoming word is FULLY
+       assembled (not from a fixed clock at enter-start) — a sequential
+       per-letter build takes longer for longer words, so timing has to
+       follow the actual animation rather than a fixed delay. ---- */
     function swap() {
       idx = (idx + 1) % WORDS.length;
       var next = WORDS[idx];
@@ -193,22 +229,15 @@
         incoming.className = 'word';
         incoming.textContent = next;
         morph.appendChild(incoming);
-
-        enterWord(incoming);
         current = incoming;
 
-        if (running) timer = setTimeout(swap, 1800);
+        enterWord(incoming, function () {
+          if (running) timer = setTimeout(swap, PAUSE_MS);
+        });
       }
 
       if (outgoing) {
-        gsap.to(outgoing, {
-          opacity: 0, filter: 'blur(6px)', y: '-0.3em',
-          duration: 0.25, ease: EASE,
-          onComplete: function () {
-            if (outgoing.parentNode) outgoing.parentNode.removeChild(outgoing);
-            startEnter();
-          }
-        });
+        exitWord(outgoing, startEnter);
       } else {
         startEnter();
       }
