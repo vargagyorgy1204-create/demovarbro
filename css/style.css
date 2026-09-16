@@ -896,10 +896,10 @@
   .stamp__inner {
     position: relative;
     z-index: 1;
-    /* 60% of the stamp's diameter (was 70%) — narrower white circle per
-       feedback, leaving a visibly wider gradient band for the rotating
-       text than before. */
-    inline-size: 60%;
+    /* 52% of the stamp's diameter (was 60%, before that 70%) — narrower
+       white circle per feedback, leaving a visibly wider gradient band for
+       the rotating text than before. */
+    inline-size: 52%;
     aspect-ratio: 1;
     border-radius: 999px;
     background: var(--pure-white);
