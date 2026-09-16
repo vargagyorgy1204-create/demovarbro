@@ -189,12 +189,17 @@
               <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
                 <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
                   <defs>
-                    <!-- radius 88 (of 100) centers the text within the band
-                         left by .stamp__inner (52% diameter) — widened from
-                         78 to give the larger .stamp__text (14px + word-
-                         spacing) enough circumference to fit without the
-                         trailing characters of each repetition clipping -->
-                    <path id="stampCircle" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0"></path>
+                    <!-- radius 84 (of 100): as close to the true middle of
+                         the band left by .stamp__inner (52% diameter, so
+                         band = roughly 26-100) as the text can get without
+                         its own arc length exceeding the circle's
+                         circumference — .stamp__text's 14px + word-spacing
+                         needs this much room; anything tighter (tested
+                         down to 80) clips the trailing separator between
+                         repetitions ("DEVELOPERVARBRO" running together
+                         with no gap). Not perfectly centered (63 would be
+                         the exact midpoint) but the closest safe fit. -->
+                    <path id="stampCircle" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0"></path>
                   </defs>
                   <text class="stamp__text">
                     <textPath href="#stampCircle" startOffset="0">
