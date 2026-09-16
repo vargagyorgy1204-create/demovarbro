@@ -887,9 +887,15 @@
     font-family: var(--font-accent);
     font-weight: 500;
     /* Sized (with the ring path radius, in the markup) for the band left
-       by .stamp__inner — now 60% of the diameter, see the comment there. */
-    font-size: 12px;
+       by .stamp__inner — now 52% of the diameter, see the comment there. */
+    font-size: 14px;
     letter-spacing: 1.1px;
+    /* letter-spacing alone is blind to word boundaries: the " • " bullet
+       separator is 3 characters (2 letter-spacing bumps land back-to-back
+       around it) while a genuine word gap like "CREATIVE DEVELOPER" is
+       only 1 space (1 bump) — word-spacing adds extra room specifically
+       at real word gaps so they don't read tighter than the bullets. */
+    word-spacing: 2px;
     fill: rgb(255 255 255 / 0.9);
   }
 

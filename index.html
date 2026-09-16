@@ -189,9 +189,12 @@
               <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
                 <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
                   <defs>
-                    <!-- radius 78 (of 100) centers the text within the narrower
-                         band left once the white circle grew to 70% diameter -->
-                    <path id="stampCircle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"></path>
+                    <!-- radius 88 (of 100) centers the text within the band
+                         left by .stamp__inner (52% diameter) — widened from
+                         78 to give the larger .stamp__text (14px + word-
+                         spacing) enough circumference to fit without the
+                         trailing characters of each repetition clipping -->
+                    <path id="stampCircle" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0"></path>
                   </defs>
                   <text class="stamp__text">
                     <textPath href="#stampCircle" startOffset="0">
