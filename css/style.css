@@ -526,7 +526,10 @@
     align-items: center;
     overflow: hidden;
     background: var(--card-secondary);
-    padding-block: 120px 64px;
+    /* Deliberately asymmetric (less top than bottom), so the vertically-
+       centered .hero__inner reads slightly higher than dead-center under
+       the nav rather than visually sinking toward the middle. */
+    padding-block: 76px 64px;
   }
 
   .hero__canvas {
