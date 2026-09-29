@@ -132,17 +132,17 @@
                        the band left by .stamp__inner (52% diameter, so
                        band = roughly 26-100) as the text can get without
                        its own arc length exceeding the circle's
-                       circumference — .stamp__text's 14px + word-spacing
-                       needs this much room; anything tighter (tested
-                       down to 80) clips the trailing separator between
-                       repetitions ("DEVELOPERVARBRO" running together
-                       with no gap). Not perfectly centered (63 would be
-                       the exact midpoint) but the closest safe fit. -->
+                       circumference. Kept at 84 for the single-loop text
+                       below too — still comfortably inside the band at
+                       the larger 22px size. -->
                   <path id="stampCircle" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0"></path>
                 </defs>
+                <!-- Single loop (not doubled) so the letters can be much
+                     bigger — see .stamp__text — and still fit the
+                     circumference without clipping. -->
                 <text class="stamp__text">
                   <textPath href="#stampCircle" startOffset="0">
-                    VARBRO • CREATIVE DEVELOPER • VARBRO • CREATIVE DEVELOPER •
+                    VARBRO • CREATIVE DEVELOPER •
                   </textPath>
                 </text>
               </svg>
