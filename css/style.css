@@ -718,7 +718,10 @@
        plain 1fr. Caught via real measurement: rows were rendering wider
        than .hero__cards itself reported. */
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
+    /* Matches .hero__row--bottom's own 10px gap (between terminal and
+       building) so the player-to-row-2 gap reads the same as the
+       terminal-to-building gap — one uniform rhythm across all 3 cards. */
+    gap: 10px;
     /* Nudges all 4 cards down relative to the left column's headline,
        independent of .hero__inner's own align-items: center. */
     margin-block-start: 60px;
@@ -811,13 +814,6 @@
        right edge exactly where it already sits. */
     inline-size: calc(100% + 48px);
     justify-self: end;
-    /* Top-aligned with .hero-sub's own top line. Not a direct 1:1 offset:
-       .hero__inner's align-items: center recenters the whole (taller)
-       cards column as this margin grows, absorbing half of every px
-       added here into an upward shift of row 1 above — measured
-       empirically (two data points, slope 0.5) rather than derived from
-       the un-nudged 52px gap directly. */
-    margin-block-start: 124px;
   }
 
   /* Same overflow trap as .hero__cards above: an explicit column keeps
