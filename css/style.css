@@ -792,14 +792,16 @@
   }
 
   /* Row 2 — terminal + building card. Building's content (a fixed
-     uppercase label + a 20px spinner) never changes with viewport width,
-     so rather than a percentage split (which has to be re-tuned every
-     time the overall card column's width changes — as it now does a lot,
-     across 960-1920px), building gets a flat width sized to its own real
-     minimum and terminal absorbs whatever's left via minmax(0, 1fr). */
+     uppercase label + a 20px spinner, stacked — see .building__header)
+     never changes with viewport width, so rather than a percentage split
+     (which has to be re-tuned every time the overall card column's width
+     changes — as it now does a lot, across 960-1920px), building gets a
+     flat width sized to its own real minimum (the label's one-line width,
+     160px — tested down to 158px before it wraps to two lines) and
+     terminal absorbs whatever's left via minmax(0, 1fr). */
   .hero__row--bottom {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 185px;
+    grid-template-columns: minmax(0, 1fr) 160px;
     gap: 10px;
     /* Widens the row 48px into the headline gap (see .hero__inner's own
        56px column gap — capped 8px short of it so this never touches the
@@ -1194,10 +1196,15 @@
     justify-content: center;
   }
 
+  /* Stacked (spinner under the label) rather than side by side — frees the
+     card to be as narrow as the label's own one-line width instead of
+     needing room for label+spinner together, which is what let the
+     terminal card next to it (see .hero__row--bottom) grow wider. */
   .building__header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
     inline-size: 100%;
   }
 
