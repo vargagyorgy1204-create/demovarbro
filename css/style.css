@@ -742,32 +742,26 @@
      .hero__row--bottom) instead of leaving a gap at the section's edge —
      the player is narrower than the column (see .card-scatter--player)
      so left-alignment (the flex default before this) stranded it short
-     of the column's right edge. */
+     of the column's right edge. Now row-direction (stamp sits beside the
+     player instead of overlaid on its corner): justify-content: flex-end
+     keeps that same group-right-alignment, gap: 10px matches the uniform
+     spacing used everywhere else in the card column (see .hero__cards,
+     .hero__row--bottom). */
   .hero__row--top {
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
   }
 
-  /* Stamp overlaid on the player's gradient album-art icon: absolutely
-     positioned against .card-scatter--player (below) and centered on
-     .player__art's own position — .player's fixed 13px/12px padding
-     (see .player) plus half of .player__art's fixed 50x50 size (see
-     .player__art) place that icon's center at (37px, 38px) from the
-     card's corner, constant across every breakpoint (no responsive
-     overrides on either value), so this single rule needs no media
-     queries. transform: translate(-50%, -50%) centers regardless of the
-     stamp's own clamp()'d size, so it reads as a badge stamped onto the
-     corner, bleeding outside the card's edge. */
+  /* Sits beside the player as its own element now, not overlaid on its
+     corner — flex: 0 0 auto so it keeps its own clamp()'d size instead of
+     stretching/shrinking with the row. */
   .card-scatter--stamp {
-    position: absolute;
-    top: 38px;
-    left: 37px;
-    transform: translate(-50%, -50%);
-    z-index: 2;
+    flex: 0 0 auto;
   }
 
   .card-scatter--player {
-    position: relative;
     flex: 0 0 auto;
     /* Narrower than the column on purpose (see .player) — width is now
        independent of the stamp, so it's set directly as a share of the
@@ -1303,18 +1297,16 @@
 
     .hero-sub { max-inline-size: 620px; }
 
-    /* The player and the terminal+building row stack in one column, full
-       width, in reading order: player (with the stamp overlaid on its
-       corner) -> terminal -> building. Previously this only applied below
-       767px, so 768-1439px rendered as two 2-up rows (stamp+player side by
-       side, terminal+building side by side) instead of a genuine single
-       column — confirmed via real DOM measurement at 1024px. `display:
-       contents` on the row wrappers lifts their children to be direct
-       flex items of .hero__cards, so the existing DOM order becomes the
-       stacking order with no markup change. The stamp itself is no longer
-       a `.hero__row` child (it's nested inside .card-scatter--player and
-       absolutely positioned — see .card-scatter--stamp above), so it's
-       unaffected by this and needs no mobile override. */
+    /* The stamp, player, and the terminal+building row stack in one
+       column, full width, in reading order: stamp -> player -> terminal
+       -> building. Previously this only applied below 767px, so
+       768-1439px rendered as two 2-up rows (stamp+player side by side,
+       terminal+building side by side) instead of a genuine single column
+       — confirmed via real DOM measurement at 1024px. `display: contents`
+       on the row wrappers lifts their children (now including the stamp,
+       a `.hero__row--top` sibling of the player — see .card-scatter--stamp
+       above) to be direct flex items of .hero__cards, so the existing DOM
+       order becomes the stacking order with no markup change. */
     .hero__cards {
       display: flex;
       flex-direction: column;

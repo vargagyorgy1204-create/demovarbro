@@ -123,6 +123,37 @@
 
         <div class="hero__row hero__row--top">
 
+          <!-- Stamp — sits beside the music player -->
+          <div class="card-scatter card-scatter--stamp">
+            <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
+              <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
+                <defs>
+                  <!-- radius 84 (of 100): as close to the true middle of
+                       the band left by .stamp__inner (52% diameter, so
+                       band = roughly 26-100) as the text can get without
+                       its own arc length exceeding the circle's
+                       circumference — .stamp__text's 14px + word-spacing
+                       needs this much room; anything tighter (tested
+                       down to 80) clips the trailing separator between
+                       repetitions ("DEVELOPERVARBRO" running together
+                       with no gap). Not perfectly centered (63 would be
+                       the exact midpoint) but the closest safe fit. -->
+                  <path id="stampCircle" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0"></path>
+                </defs>
+                <text class="stamp__text">
+                  <textPath href="#stampCircle" startOffset="0">
+                    VARBRO • CREATIVE DEVELOPER • VARBRO • CREATIVE DEVELOPER •
+                  </textPath>
+                </text>
+              </svg>
+
+              <span class="stamp__inner" aria-hidden="true">
+                <i data-lucide="arrow-up-right" class="icon stamp__icon"></i>
+                <i data-lucide="arrow-up-right" class="icon stamp__icon stamp__icon--copy"></i>
+              </span>
+            </a>
+          </div>
+
           <!-- Music player -->
           <div class="card-scatter card-scatter--player">
             <article class="card player" id="musicCard" data-magnetic>
@@ -183,37 +214,6 @@
 
               <audio id="lofi" preload="metadata"></audio>
             </article>
-
-            <!-- Stamp — overlaid on the player's gradient album-art icon -->
-            <div class="card-scatter card-scatter--stamp">
-              <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
-                <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
-                  <defs>
-                    <!-- radius 84 (of 100): as close to the true middle of
-                         the band left by .stamp__inner (52% diameter, so
-                         band = roughly 26-100) as the text can get without
-                         its own arc length exceeding the circle's
-                         circumference — .stamp__text's 14px + word-spacing
-                         needs this much room; anything tighter (tested
-                         down to 80) clips the trailing separator between
-                         repetitions ("DEVELOPERVARBRO" running together
-                         with no gap). Not perfectly centered (63 would be
-                         the exact midpoint) but the closest safe fit. -->
-                    <path id="stampCircle" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0"></path>
-                  </defs>
-                  <text class="stamp__text">
-                    <textPath href="#stampCircle" startOffset="0">
-                      VARBRO • CREATIVE DEVELOPER • VARBRO • CREATIVE DEVELOPER •
-                    </textPath>
-                  </text>
-                </svg>
-
-                <span class="stamp__inner" aria-hidden="true">
-                  <i data-lucide="arrow-up-right" class="icon stamp__icon"></i>
-                  <i data-lucide="arrow-up-right" class="icon stamp__icon stamp__icon--copy"></i>
-                </span>
-              </a>
-            </div>
           </div>
 
         </div><!-- /.hero__row--top -->
