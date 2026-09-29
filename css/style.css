@@ -746,10 +746,14 @@
      player instead of overlaid on its corner): justify-content: flex-end
      keeps that same group-right-alignment, gap: 10px matches the uniform
      spacing used everywhere else in the card column (see .hero__cards,
-     .hero__row--bottom). */
+     .hero__row--bottom). align-items: flex-end (not center) bottom-aligns
+     the shorter stamp with the taller player, so the stamp's own gap down
+     to row 2 matches the player's — center would leave the stamp's bottom
+     edge higher than the player's, and it's row 1's shared bottom edge
+     (not either child's own height) that .hero__cards' gap measures from. */
   .hero__row--top {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
     justify-content: flex-end;
     gap: 10px;
   }
