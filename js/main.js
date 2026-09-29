@@ -67,7 +67,8 @@
   }
 
   /* ======================================================================
-     Logo guard — the "Vb" PNGs are not in assets/img yet
+     Logo guard — falls back to a text "Vb" mark if the PNGs ever fail
+     to load (e.g. a deploy that drops assets/img/logo*.png).
      ====================================================================== */
   (function guardLogo() {
     var logo = document.querySelector('.nav__logo');
@@ -81,8 +82,8 @@
       warned = true;
       logo.classList.add('is-missing');
       console.warn(
-        '[VarBro] Logo image missing — expected assets/img/vb-logo-dark-square.png and ' +
-        'assets/img/vb-logo-light-square.png. Falling back to a text "Vb" mark.'
+        '[VarBro] Logo image missing — expected assets/img/logowhite.png and ' +
+        'assets/img/logoblack.png. Falling back to a text "Vb" mark.'
       );
     }
 
