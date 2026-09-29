@@ -884,16 +884,14 @@
     font-weight: 500;
     /* Sized to fill the band left by .stamp__inner (52% diameter) as much
        as possible while still leaving a small clean margin at both the
-       white circle and the stamp's outer edge — only fits at this size
-       because the markup now loops the phrase once instead of twice
-       (see index.html); doubled, this size would overrun the circle's
-       circumference and clip. letter-spacing/word-spacing trimmed down
-       from the doubled-loop version now that there's no need to stretch
-       two repetitions' worth of gaps evenly — tight but clean at this
-       size and loop count. */
-    font-size: 22px;
-    letter-spacing: 0.3px;
-    word-spacing: 0.5px;
+       white circle and the stamp's outer edge. 22px still read as thin
+       and small once checked at real (non-upscaled) screenshot size —
+       raised further to 28px, paired with widening #stampCircle's radius
+       84->88 in index.html so the longer arc length at this bigger size
+       still fits the single-loop phrase without self-overlap. No extra
+       letter-spacing/word-spacing needed at this size — the font's own
+       natural spacing already reads cleanly around the loop. */
+    font-size: 28px;
     fill: rgb(255 255 255 / 0.9);
   }
 

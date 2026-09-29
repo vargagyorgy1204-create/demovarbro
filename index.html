@@ -128,14 +128,18 @@
             <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
               <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
                 <defs>
-                  <!-- radius 84 (of 100): as close to the true middle of
-                       the band left by .stamp__inner (52% diameter, so
-                       band = roughly 26-100) as the text can get without
-                       its own arc length exceeding the circle's
-                       circumference. Kept at 84 for the single-loop text
-                       below too — still comfortably inside the band at
-                       the larger 22px size. -->
-                  <path id="stampCircle" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0"></path>
+                  <!-- radius 88 (of 100): the first pass (22px text at
+                       radius 84) turned out to render far smaller/thinner
+                       than intended relative to the band once actually
+                       viewed at real size (not zoomed screenshots) — a
+                       genuinely bigger .stamp__text needs correspondingly
+                       more circumference, so this moved out from 84.
+                       Since font-size is set in the SVG's own local units
+                       (same coordinate space as this radius), the text-
+                       to-stamp ratio is identical at every real rendered
+                       size the stamp's own clamp() produces (58-79px) —
+                       verified via screenshots at both ends. -->
+                  <path id="stampCircle" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0"></path>
                 </defs>
                 <!-- Single loop (not doubled) so the letters can be much
                      bigger — see .stamp__text — and still fit the
