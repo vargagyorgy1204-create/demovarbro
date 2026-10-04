@@ -3,7 +3,7 @@
    Section 1: global foundation + hero
    ========================================================================== */
 
-@layer reset, base, components, hero, responsive;
+@layer reset, base, components, hero, about, responsive;
 
 /* --------------------------------------------------------------------------
    Design tokens
@@ -1374,5 +1374,109 @@
     .stamp,
     .stamp__icon,
     .stamp__icon--copy { transition: none; }
+  }
+}
+
+/* ==========================================================================
+   === About section ===
+   #about ("Rólam"): photo with a scroll-scrubbed neutral -> smile crossfade
+   (js/about.js) beside the bio. Light theme — the nav and dot rail flip to
+   their light variants via main.js's generic section[data-theme] triggers.
+   ========================================================================== */
+@layer about {
+
+  #about {
+    min-height: 100svh;
+    padding-block: clamp(80px, 12vh, 140px);
+    display: flex;
+    align-items: center;
+    background: var(--card-secondary-light);
+  }
+
+  .about__inner {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 32px;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    column-gap: clamp(40px, 6vw, 96px);
+    align-items: center;
+  }
+
+  .about__photo {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    /* Same size as `height: min(72svh, 640px)` whenever the column has
+       room for it, but expressed as a width so the 4:5 ratio survives
+       when the column is narrower than that height implies (measured:
+       5fr of the grid is ~381px at a 960px viewport vs the 512px a
+       640px-tall 4:5 box needs). A fixed height + max-width: 100% would
+       squash the box to ~381x640 there instead of shrinking the photo. */
+    width: min(100%, calc(min(72svh, 640px) * 4 / 5));
+    justify-self: center;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--card-primary-a) 45%, transparent);
+  }
+
+  .about__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Revealed 1:1 with scroll by about.js; stays hidden under reduced
+     motion or if its file fails to load. */
+  .about__img--smile { opacity: 0; }
+
+  .about__eyebrow {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-style: normal;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: color-mix(in srgb, var(--card-secondary) 60%, transparent);
+  }
+
+  .about__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(30px, 3.4vw, 52px);
+    line-height: 1.1;
+    color: var(--card-secondary);
+    margin: 14px 0 24px;
+  }
+
+  .about__bio {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(15px, 1.25vw, 18px);
+    line-height: 1.75;
+    color: color-mix(in srgb, var(--card-secondary) 78%, transparent);
+    max-width: 540px;
+  }
+
+  .about__bio + .about__bio { margin-top: 16px; }
+
+  /* Both photos failed to load (about.js): drop the photo column and let
+     the text span the full width. */
+  #about.about--no-photo .about__inner { grid-template-columns: minmax(0, 1fr); }
+  #about.about--no-photo .about__photo { display: none; }
+
+  /* Same breakpoint as the hero's single-column switch. */
+  @media (max-width: 959px) {
+    .about__inner {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 36px;
+    }
+
+    .about__photo {
+      height: auto;
+      width: min(100%, 420px);
+    }
   }
 }

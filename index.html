@@ -261,10 +261,30 @@
 
 
   <!-- ========================================================
+       ABOUT — "Rólam": photo with scroll-scrubbed expression
+       change (js/about.js) + bio. The photo's id/classes are kept
+       stable for the later tile-disintegration transition into
+       #stack.
+       ======================================================== -->
+  <section id="about" data-theme="light">
+    <div class="about__inner">
+      <div class="about__photo" id="about-photo">
+        <img class="about__img about__img--neutral" src="assets/img/about-photo-neutral.jpg" width="1100" height="1375" alt="Varga György" loading="eager" fetchpriority="low" decoding="async">
+        <img class="about__img about__img--smile" src="assets/img/about-photo-smile.jpg" width="1100" height="1375" alt="" aria-hidden="true" loading="eager" fetchpriority="low" decoding="async">
+      </div>
+      <div class="about__text">
+        <p class="about__eyebrow">RÓLAM</p>
+        <h2 class="about__title">Dizájn, kód és mozgás</h2>
+        <p class="about__bio">Szenvedélyem a digitális élmények megteremtése a dizájn, a kód és a mozgás metszéspontjában. Creatív webfejlesztőként nem csupán weboldalakat építek, hanem olyan egyedi digitális termékeket hozok létre, amelyek vizuálisan lenyűgözőek és üzletileg eredményesek.</p>
+        <p class="about__bio">A koncepciótervtől a precíz kódoláson át a finom animációkig minden részletre odafigyelek. Nálam nincsenek technikai korlátok. Vizuálisan erőteljes és technológiailag kifogástalan és 100%-ban reszponzív megoldásokat szállítok az Ön számára.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
        PLACEHOLDER SECTIONS — built in a later pass
        ======================================================== -->
-  <section id="about"     data-theme="light" class="placeholder placeholder--light"></section>
-  <section id="stack"     data-theme="dark"  class="placeholder placeholder--dark"></section>
+  <section id="stack"    data-theme="dark"  class="placeholder placeholder--dark"></section>
   <section id="portfolio" data-theme="light" class="placeholder placeholder--white"></section>
   <section id="services"  data-theme="dark"  class="placeholder placeholder--dark"></section>
   <section id="contact"   data-theme="dark"  class="placeholder placeholder--dark"></section>
@@ -286,6 +306,7 @@
 <script src="js/shader.js"></script>
 <script src="js/cards.js"></script>
 <script src="js/hero.js"></script>
+<script src="js/about.js"></script>
 <script src="js/main.js"></script>
 
 </body>
