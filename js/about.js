@@ -52,20 +52,23 @@
     });
   }
 
-  /* Layout position of an element in document coordinates — summed
-     offsetTops ignore CSS transforms, so the entrance's y-offset on the
-     photo can't skew where the scrub starts and ends. */
-  function docTop(el) {
-    var top = 0;
-    while (el) { top += el.offsetTop; el = el.offsetParent; }
-    return top;
-  }
-
   /* ------------------------------------------------------- expression scrub
-     Smile opacity runs 0 -> 1, linear and 1:1 with scroll: exactly 0 when
-     the photo's top sits at 75% of the viewport, exactly 1 when its centre
-     reaches 40%. Created up front so it's ready before the images settle;
-     torn down below if the smile file turns out to be missing. */
+     Smile opacity runs 0 -> 1, linear and 1:1 with scroll, while the section
+     is PINNED: the pin starts the moment the section is centred in the
+     viewport and holds for 0.8 of a screen, so the expression change plays
+     out exactly while the visitor is looking straight at the photo.
+
+     Tied to the pin rather than to the photo's travel across the viewport
+     (the first cut of this): measured on the deployed build, the untinned
+     version did run correctly — scrub progress tracked scroll 1:1 — but it
+     finished right as the section settled on screen and lasted only ~1s
+     during a normal flick, and since the two frames differ by nothing but a
+     slight change of expression, the crossfade was effectively invisible.
+
+     refreshPriority keeps this pin ahead of main.js's section triggers in
+     the refresh order, since the pin spacer shifts everything below it.
+     Created up front so it's ready before the images settle; torn down
+     below if the smile file turns out to be missing. */
   var scrub = null;
 
   if (animate && photo && smile) {
@@ -73,21 +76,28 @@
       opacity: 1,
       ease: 'none',
       scrollTrigger: {
-        trigger: photo,
-        start: function () { return docTop(photo) - window.innerHeight * 0.75; },
-        end: function () {
-          return docTop(photo) + photo.offsetHeight / 2 - window.innerHeight * 0.40;
-        },
-        scrub: true
+        trigger: section,
+        start: 'center center',
+        end: function () { return '+=' + Math.round(window.innerHeight * 0.8); },
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+        scrub: true,
+        invalidateOnRefresh: true,
+        refreshPriority: 1
       }
     });
   }
 
   function killScrub() {
     if (!scrub) return;
-    if (scrub.scrollTrigger) scrub.scrollTrigger.kill();
+    /* kill(true) reverts the pin, removing the spacer it injected — without
+       it the page would keep 0.8 screens of empty scroll for an effect that
+       is no longer there. */
+    if (scrub.scrollTrigger) scrub.scrollTrigger.kill(true);
     scrub.kill();
     scrub = null;
+    if (hasGsap) ScrollTrigger.refresh();
   }
 
   /* ------------------------------------------------------------- entrance
