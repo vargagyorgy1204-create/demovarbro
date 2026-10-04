@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rólam bővebben — VarBro</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&family=Montserrat:wght@400;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ==========================================================
+     NAV — top bar
+     ========================================================== -->
+<header class="nav" id="nav">
+  <a class="nav__logo" href="index.html" aria-label="VarBro — vissza a főoldalra" data-magnetic>
+    <img class="nav__logo-img nav__logo-img--dark" src="assets/img/logowhite.png" alt="VarBro">
+    <img class="nav__logo-img nav__logo-img--light" src="assets/img/logoblack.png" alt="" aria-hidden="true">
+    <span class="nav__logo-fallback" aria-hidden="true">Vb</span>
+  </a>
+
+  <button class="burger" id="burger" type="button" aria-label="Menü megnyitása" aria-expanded="false" aria-controls="menu" data-magnetic>
+    <span class="burger__line"></span>
+    <span class="burger__line"></span>
+    <span class="burger__line"></span>
+  </button>
+</header>
+
+
+<!-- ==========================================================
+     NAV — fullscreen menu
+     ========================================================== -->
+<div class="menu" id="menu" inert>
+  <nav class="menu__inner" aria-label="Főmenü">
+    <ul class="menu__list">
+      <li class="menu__item"><a class="menu__link" href="index.html#about" data-magnetic>Rólam</a></li>
+      <li class="menu__item"><a class="menu__link" href="index.html#stack" data-magnetic>Technológiák</a></li>
+      <li class="menu__item"><a class="menu__link" href="index.html#portfolio" data-magnetic>Munkáim</a></li>
+      <li class="menu__item"><a class="menu__link" href="index.html#services" data-magnetic>Szolgáltatások</a></li>
+      <li class="menu__item"><a class="menu__link" href="index.html#contact" data-magnetic>Kapcsolat</a></li>
+    </ul>
+
+    <div class="menu__social">
+      <a class="menu__social-link" href="https://www.instagram.com/webdeveloper_varbro" target="_blank" rel="noopener" data-magnetic>
+        <i data-lucide="at-sign" class="icon icon--sm"></i>
+        <span>Instagram</span>
+      </a>
+    </div>
+  </nav>
+</div>
+
+
+<main>
+  <div class="page-placeholder">Hamarosan...</div>
+</main>
+
+
+<!-- ==========================================================
+     FOOTER
+     ========================================================== -->
+<footer class="site-footer">
+  <p class="site-footer__text">© 2026 VarBro — minden jog fenntartva.</p>
+  <a class="site-footer__link" href="https://www.instagram.com/webdeveloper_varbro" target="_blank" rel="noopener" data-magnetic>
+    <i data-lucide="at-sign" class="icon icon--sm"></i>
+    <span>Instagram</span>
+  </a>
+</footer>
+
+
+<!-- ==========================================================
+     LIBRARIES — shared nav/menu stack only (no hero/about scripts:
+     no three.js, shader.js, cards.js, hero.js or about.js, none of
+     which apply off the home page).
+     ========================================================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Flip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<script src="js/main.js"></script>
+
+</body>
+</html>

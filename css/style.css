@@ -1277,6 +1277,47 @@
   .placeholder--light { background: var(--card-secondary-light); }
   .placeholder--dark  { background: var(--card-secondary); }
   .placeholder--white { background: var(--pure-white); }
+
+  /* ---------- Standalone placeholder page (e.g. rolam-bovebben.html) ---------- */
+  .page-placeholder {
+    min-block-size: 70svh;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-body);
+    font-size: clamp(16px, 1.6vw, 20px);
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  /* ---------- Site footer (standalone pages, e.g. rolam-bovebben.html) ---------- */
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 32px;
+    border-block-start: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  .site-footer__text {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  .site-footer__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 14px;
+    color: rgb(255 255 255 / 0.75);
+    transition: color var(--dur) ease;
+  }
+
+  .site-footer__link:hover,
+  .site-footer__link:focus-visible { color: var(--card-primary-a); }
 }
 
 /* --------------------------------------------------------------------------
@@ -1461,6 +1502,13 @@
   }
 
   .about__bio + .about__bio { margin-top: 16px; }
+
+  /* .btn is the site's standard button (see @layer components) — #about's
+     data-theme="light" already gives it the right resting look (coloured
+     outline, same as how [data-theme="dark"] gives the hero's identical
+     "Kapcsolat" button a white one), so no section-specific override is
+     needed beyond spacing. */
+  .about__more { margin-top: 32px; }
 
   /* Both photos failed to load (about.js): drop the photo column and let
      the text span the full width. */

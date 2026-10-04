@@ -23,7 +23,7 @@
   var smile   = section.querySelector('.about__img--smile');
   var inner   = section.querySelector('.about__inner');
   var textEls = Array.prototype.slice.call(
-    section.querySelectorAll('.about__eyebrow, .about__title, .about__bio')
+    section.querySelectorAll('.about__eyebrow, .about__title, .about__bio, .about__more')
   );
 
   var hasGsap = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
