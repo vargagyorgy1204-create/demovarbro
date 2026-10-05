@@ -283,9 +283,70 @@
   </section>
 
   <!-- ========================================================
+       STACK — pinned 3D "lazy susan" carousel of 7 technologies
+       (js/stack.js). Each badge carries its own name AND description
+       as real text; .stack__desc is clipped (sr-only) in the 3D view
+       and shown in full in the flat fallback grid. .stack__caption is
+       only a visual projection of the focused badge, hence aria-hidden.
+       --a is the badge's fixed angle on the ring (360/7 apart), so the
+       ring is correctly laid out from CSS alone, before stack.js runs.
+       ======================================================== -->
+  <section id="stack" data-theme="dark">
+    <canvas id="stack-bg" aria-hidden="true"></canvas>
+    <div class="stack__inner">
+      <p class="stack__eyebrow">A STACKEM</p>
+      <h2 class="stack__title">Amivel építek</h2>
+
+      <div class="stack__stage">
+        <ul class="stack__ring">
+          <li class="stack__badge" data-index="0" data-icon="html5" style="--a: 0deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">HTML5</span>
+            <span class="stack__desc">Szemantikus és akadálymentes szerkezet minden projekt alapjaként.</span>
+          </li>
+          <li class="stack__badge" data-index="1" data-icon="css3" style="--a: 51.4286deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">CSS3</span>
+            <span class="stack__desc">Egyedi rácsok, bento-layout és finom átmenetek — keretrendszer nélkül.</span>
+          </li>
+          <li class="stack__badge" data-index="2" data-icon="javascript" style="--a: 102.8571deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">JavaScript</span>
+            <span class="stack__desc">Interaktív felületek és egyedi logika, vanilla JS-ben.</span>
+          </li>
+          <li class="stack__badge" data-index="3" data-icon="vscode" style="--a: 154.2857deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">VS Code</span>
+            <span class="stack__desc">A napi fejlesztői környezetem: gyors iteráció és verziókövetés.</span>
+          </li>
+          <li class="stack__badge" data-index="4" data-icon="gsap" style="--a: 205.7143deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">GSAP</span>
+            <span class="stack__desc">Időzített animációk és scroll-vezérelt jelenetek, pontos kontrollal.</span>
+          </li>
+          <li class="stack__badge" data-index="5" data-icon="threejs" style="--a: 257.1429deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">Three.js</span>
+            <span class="stack__desc">WebGL-shaderek és 3D jelenetek közvetlenül a böngészőben.</span>
+          </li>
+          <li class="stack__badge" data-index="6" data-icon="claude" style="--a: 308.5714deg">
+            <span class="stack__icon" aria-hidden="true"></span>
+            <span class="stack__name">Claude Code</span>
+            <span class="stack__desc">AI-párprogramozás: gyorsabb építés, szigorúbb kódellenőrzés.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="stack__caption" aria-hidden="true">
+        <h3 class="stack__caption-name"></h3>
+        <p class="stack__caption-desc"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
        PLACEHOLDER SECTIONS — built in a later pass
        ======================================================== -->
-  <section id="stack"    data-theme="dark"  class="placeholder placeholder--dark"></section>
   <section id="portfolio" data-theme="light" class="placeholder placeholder--white"></section>
   <section id="services"  data-theme="dark"  class="placeholder placeholder--dark"></section>
   <section id="contact"   data-theme="dark"  class="placeholder placeholder--dark"></section>
@@ -308,6 +369,7 @@
 <script src="js/cards.js"></script>
 <script src="js/hero.js"></script>
 <script src="js/about.js"></script>
+<script src="js/stack.js"></script>
 <script src="js/main.js"></script>
 
 </body>

@@ -3,7 +3,7 @@
    Section 1: global foundation + hero
    ========================================================================== */
 
-@layer reset, base, components, hero, about, responsive;
+@layer reset, base, components, hero, about, stack, responsive;
 
 /* --------------------------------------------------------------------------
    Design tokens
@@ -1526,5 +1526,317 @@
       height: auto;
       width: min(100%, 420px);
     }
+  }
+}
+
+/* ==========================================================================
+   === Stack section ===
+   #stack ("A stackem"): a pinned, scroll-driven 3D carousel of 7 technology
+   badges (js/stack.js) over an ambient Three.js particle field.
+
+   The ring is real DOM in a preserve-3d context — not WebGL — so the logos
+   stay crisp at any DPI and the names/descriptions stay real, selectable
+   text. js/stack.js writes only --zf (0..1 along the radius), --s, opacity
+   and filter per badge; the transform ORDER (rotateY then translateZ) has
+   to come from CSS, because GSAP composes translate before rotate, which
+   would stack every badge on the same point instead of spreading them
+   around the ring.
+   ========================================================================== */
+@layer stack {
+
+  #stack {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-block-size: 100svh;
+    padding-block: clamp(48px, 7svh, 96px);
+    background: var(--card-secondary);
+    /* No overflow: hidden here. The canvas is inset:0 inside this (relative)
+       box so it cannot bleed out anyway, and clipping the pinned section
+       made unpinning register as a full-viewport layout shift (measured:
+       0.96 of the section's 2.0 CLS came from it alone). */
+  }
+
+  #stack-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    pointer-events: none;
+    /* The canvas is a decorative backdrop: nothing inside it can affect
+       layout. Saying so matters — without it, the moment the section pins
+       (position: static -> fixed) Chrome re-resolves this absolutely
+       positioned replaced element and books it as a full-viewport layout
+       shift, which measured as CLS 1.0 on a normal wheel scroll even though
+       nothing visibly moves. With containment it is 0.004. */
+    contain: layout paint;
+  }
+
+  .stack__inner {
+    position: relative;
+    z-index: 1;
+    inline-size: 100%;
+    max-inline-size: 1280px;
+    margin-inline: auto;
+    padding-inline: var(--shell-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .stack__eyebrow {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .stack__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(30px, 3.4vw, 52px);
+    line-height: 1.1;
+    color: var(--pure-white);
+    margin: 14px 0 0;
+  }
+
+  /* ---------- the ring ---------- */
+
+  .stack__stage {
+    position: relative;
+    inline-size: 100%;
+    /* An svh term as well as vw: on a short viewport the ring has to shrink
+       or it collides with the title and the caption (checked at 700px). */
+    block-size: clamp(250px, 40svh, 420px);
+    margin-block-start: clamp(16px, 3svh, 40px);
+    perspective: 1200px;
+    perspective-origin: 50% 42%;
+  }
+
+  .stack__ring {
+    /* A zero-size box at the stage centre: every badge is positioned against
+       this single point, so the ring axis is exactly the centre. */
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: 0;
+    block-size: 0;
+    transform-style: preserve-3d;
+    /* Negative X tilt looks DOWN onto the ring (near edge drops, far edge
+       rises), which is what makes it read as an ellipse rather than a line.
+
+       The order here is load-bearing and must stay in CSS: rotateX THEN
+       rotateY spins the ring about its own tilted axis (a lazy susan).
+       gsap.set(ring, {rotationX, rotationY}) produces the matrix the other
+       way round — decoded from a live frame, it was Ry·Rx, i.e. the ring
+       was tilted first and then spun about the WORLD vertical, so the tilt
+       swept around with the rotation and the front badge picked up a roll
+       that grew to ~15deg by the end of the pin. stack.js only writes
+       --ring-y. */
+    transform: rotateX(-12deg) rotateY(var(--ring-y, 0deg));
+    --ring-r: clamp(230px, 26vw, 380px);
+    --badge-w: clamp(150px, 15vw, 200px);
+    --badge-h: clamp(128px, 13vw, 168px);
+  }
+
+  .stack__badge {
+    position: absolute;
+    inline-size: var(--badge-w);
+    block-size: var(--badge-h);
+    /* Centre the badge box on the ring origin so rotateY turns it about the
+       ring axis rather than about its own corner. */
+    inset-inline-start: calc(var(--badge-w) / -2);
+    inset-block-start: calc(var(--badge-h) / -2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 1.2vw, 16px);
+    /* --a is fixed per badge (set in the markup); --zf and --s are driven by
+       stack.js — --zf 0 -> 1 is the entrance flying out from the centre. */
+    transform:
+      rotateY(var(--a, 0deg))
+      translateZ(calc(var(--ring-r) * var(--zf, 1)))
+      scale(var(--s, 1));
+    will-change: transform, opacity, filter;
+  }
+
+  .stack__icon {
+    inline-size: clamp(44px, 4vw, 56px);
+    block-size: clamp(44px, 4vw, 56px);
+    /* A gradient cannot be applied to an SVG fill, so the logo is a mask over
+       a painted box: white normally, brand gradient when focused. */
+    background: var(--pure-white);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    transition: background 0.3s ease;
+  }
+
+  /* The mask URLs live here, not in the markup: a url() inside a custom
+     property is resolved against the stylesheet that consumes it, so an
+     inline --icon written in index.html resolved to /css/assets/icons/*.svg
+     and 404'd, leaving every logo invisible. Declared in this file the
+     relative path is correct, and it stays correct under the /demovarbro/
+     base path on Pages. */
+  .stack__badge[data-icon="html5"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/html5.svg');
+            mask-image: url('../assets/icons/html5.svg');
+  }
+  .stack__badge[data-icon="css3"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/css3.svg');
+            mask-image: url('../assets/icons/css3.svg');
+  }
+  .stack__badge[data-icon="javascript"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/javascript.svg');
+            mask-image: url('../assets/icons/javascript.svg');
+  }
+  .stack__badge[data-icon="vscode"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/vscode.svg');
+            mask-image: url('../assets/icons/vscode.svg');
+  }
+  .stack__badge[data-icon="gsap"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/gsap.svg');
+            mask-image: url('../assets/icons/gsap.svg');
+  }
+  .stack__badge[data-icon="threejs"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/threejs.svg');
+            mask-image: url('../assets/icons/threejs.svg');
+  }
+  .stack__badge[data-icon="claude"] .stack__icon {
+    -webkit-mask-image: url('../assets/icons/claude.svg');
+            mask-image: url('../assets/icons/claude.svg');
+  }
+
+  .stack__badge.is-focused .stack__icon { background: var(--card-primary); }
+
+  .stack__name {
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: clamp(14px, 1.2vw, 17px);
+    letter-spacing: 0.5px;
+    color: rgb(255 255 255 / 0.8);
+    transition: color 0.3s ease;
+  }
+
+  .stack__badge.is-focused .stack__name { color: var(--pure-white); }
+
+  /* Always in the DOM as real text for screen readers and crawlers; clipped
+     rather than display:none / opacity:0 so it is still announced. The flat
+     fallback below un-clips it. */
+  .stack__desc {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---------- caption: a visual projection of the focused badge ---------- */
+
+  .stack__caption {
+    margin-block-start: clamp(12px, 2.5svh, 32px);
+    /* Reserved height: swapping the text must not move the layout. */
+    min-block-size: clamp(74px, 11svh, 104px);
+    max-inline-size: 560px;
+  }
+
+  .stack__caption-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(18px, 1.8vw, 24px);
+    line-height: 1.2;
+    color: var(--pure-white);
+    margin: 0 0 8px;
+  }
+
+  .stack__caption-desc {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(14px, 1.1vw, 16px);
+    line-height: 1.6;
+    color: rgb(255 255 255 / 0.62);
+    margin: 0;
+  }
+
+  /* ======================================================================
+     Flat fallback — viewport < 768px, hardwareConcurrency < 4 (the same
+     low-CPU test shader.js uses) or prefers-reduced-motion. No pin, no 3D,
+     no WebGL: a card grid with every description visible at rest.
+     ====================================================================== */
+
+  #stack.stack--flat {
+    min-block-size: 0;
+    padding-block: clamp(72px, 10svh, 120px);
+    background:
+      radial-gradient(60% 55% at 18% 18%, color-mix(in srgb, var(--card-primary-a) 26%, transparent) 0%, transparent 62%),
+      radial-gradient(55% 50% at 85% 30%, color-mix(in srgb, var(--card-primary-b) 20%, transparent) 0%, transparent 64%),
+      radial-gradient(70% 60% at 50% 95%, color-mix(in srgb, var(--card-accent-cool-a) 30%, transparent) 0%, transparent 66%),
+      var(--card-secondary);
+  }
+
+  .stack--flat #stack-bg,
+  .stack--flat .stack__caption { display: none; }
+
+  .stack--flat .stack__stage {
+    block-size: auto;
+    perspective: none;
+    margin-block-start: clamp(28px, 5svh, 48px);
+  }
+
+  .stack--flat .stack__ring {
+    position: static;
+    inline-size: 100%;
+    block-size: auto;
+    transform: none;
+    transform-style: flat;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(12px, 1.6vw, 20px);
+  }
+
+  .stack--flat .stack__badge {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    transform: none;
+    filter: none;
+    padding: clamp(20px, 2.4vw, 28px) clamp(14px, 1.8vw, 22px);
+    border-radius: 20px;
+    background: rgb(255 255 255 / 0.04);
+    border: 1px solid rgb(255 255 255 / 0.09);
+    gap: 12px;
+  }
+
+  /* Un-clipped here: in the flat grid the description is the content, not an
+     accessibility-only copy. */
+  .stack--flat .stack__desc {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font-family: var(--font-body);
+    font-size: clamp(12px, 1vw, 13.5px);
+    line-height: 1.6;
+    color: rgb(255 255 255 / 0.55);
+    text-wrap: pretty;
+  }
+
+  /* 7 cards read as 4 + 3 once there is room for four columns. */
+  @media (min-width: 768px) {
+    .stack--flat .stack__ring { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 }
