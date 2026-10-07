@@ -1136,6 +1136,16 @@
     background: var(--card-primary);
   }
 
+  /* Mirror of the top strip, on the bottom edge. */
+  .term::after {
+    content: "";
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    block-size: 1px;
+    background: var(--card-primary);
+  }
+
   .term__bar { display: flex; gap: 6px; margin-block-end: 12px; }
 
   .term__dot {
