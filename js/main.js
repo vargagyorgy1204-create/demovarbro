@@ -226,12 +226,31 @@
 
     var sections = Array.prototype.slice.call(document.querySelectorAll('section[data-theme]'));
 
+    /* A section that is itself pinned (#about, #stack) would get its end
+       measured as if the pin spacing did not exist: the trigger would end
+       one screen after it starts, and scrolling back up through the pinned
+       stretch would leave the previous theme/dot in place. For those,
+       end where the section really leaves the nav line: the pin's end plus
+       the section's remaining travel. */
+    function pinOf(section) {
+      return ScrollTrigger.getAll().filter(function (st) { return st.pin === section; })[0];
+    }
+
     sections.forEach(function (section, i) {
       /* 46px ~ the vertical centre of the nav bar */
+      var pinned = pinOf(section);
       ScrollTrigger.create({
         trigger: section,
         start: 'top 46px',
-        end: 'bottom 46px',
+        end: pinned
+          ? function () {
+              /* Section top sits at (docTop - pin.start) on screen while pinned
+                 and after, so it reaches 46px after scrolling that plus its height. */
+              var top = (pinned.pin.parentNode.classList.contains('pin-spacer')
+                          ? pinned.pin.parentNode : pinned.pin).getBoundingClientRect().top + window.scrollY;
+              return pinned.end + (top - pinned.start) + section.offsetHeight - 46;
+            }
+          : 'bottom 46px',
         onEnter: function () { applyTheme(section.dataset.theme); setActiveDot(i); },
         onEnterBack: function () { applyTheme(section.dataset.theme); setActiveDot(i); }
       });
