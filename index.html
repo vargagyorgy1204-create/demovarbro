@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&family=Montserrat:wght@400;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&family=Montserrat:wght@400;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Antonio:wght@500&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -128,26 +128,17 @@
             <a class="stamp" href="#contact" aria-label="Ugrás a Kapcsolat szakaszra" data-magnetic>
               <svg class="stamp__ring" viewBox="0 0 200 200" aria-hidden="true">
                 <defs>
-                  <!-- radius 88 (of 100): the first pass (22px text at
-                       radius 84) turned out to render far smaller/thinner
-                       than intended relative to the band once actually
-                       viewed at real size (not zoomed screenshots) — a
-                       genuinely bigger .stamp__text needs correspondingly
-                       more circumference, so this moved out from 84.
-                       Since font-size is set in the SVG's own local units
-                       (same coordinate space as this radius), the text-
-                       to-stamp ratio is identical at every real rendered
-                       size the stamp's own clamp() produces (58-79px) —
-                       verified via screenshots at both ends. -->
-                  <path id="stampCircle" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0"></path>
+                  <!-- Guide circle on the middle of the gradient band: the
+                       band runs from the white inner circle (r=52 of 100)
+                       to the outer edge (r=100), so its middle is r=76.
+                       Circumference = 2*PI*76 = 477.52 (the textLength). -->
+                  <path id="stampCircle" d="M100,100 m-76,0 a76,76 0 1,1 152,0 a76,76 0 1,1 -152,0"></path>
                 </defs>
-                <!-- Single loop (not doubled) so the letters can be much
-                     bigger — see .stamp__text — and still fit the
-                     circumference without clipping. -->
-                <text class="stamp__text">
-                  <textPath href="#stampCircle" startOffset="0">
-                    VARBRO • CREATIVE DEVELOPER •
-                  </textPath>
+                <!-- textLength = the circumference, so the string closes the
+                     circle with even spacing and no gap at the seam. The
+                     trailing space is the seam gap, kept by xml:space. -->
+                <text class="stamp__text" xml:space="preserve" dominant-baseline="middle">
+                  <textPath href="#stampCircle" startOffset="0%" textLength="477.52" lengthAdjust="spacingAndGlyphs">VARBRO ° CREATIVE ° DEV ° VARBRO ° CREATIVE ° DEV ° </textPath>
                 </text>
               </svg>
 

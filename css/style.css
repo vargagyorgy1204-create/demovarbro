@@ -880,25 +880,13 @@
   }
 
   .stamp__text {
-    font-family: var(--font-accent);
+    font-family: 'Antonio', var(--font-accent), sans-serif;
     font-weight: 500;
-    /* font-size lives in the SVG's own local coordinate space (same as
-       #stampCircle's radius in index.html — both on the 0-200 viewBox
-       scale), so "11% of the stamp's diameter" is 11% of that same local
-       200-unit diameter regardless of the stamp's actual real rendered
-       px size: 200 * 0.11 = 22. The previous pass pushed this to 28px,
-       which read as overlapping once actually checked live — reverted to
-       22px + a tight-but-clear letter-spacing, verified via
-       SVGTextContentElement.getComputedTextLength() against
-       #stampCircle's getTotalLength(): ~36% of the circumference is
-       still unused at both ends of .stamp's clamp(58px, 5.8vw, 79px) —
-       comfortably past the 15% minimum margin, confirmed via screenshots
-       at both extremes with the spin animation paused first (mid-
-       rotation, getBoundingClientRect() reports an inflated, rotated
-       bounding box that isn't a real sizing issue — arc-length and
-       screenshots are what actually matter here). */
-    font-size: 22px;
-    letter-spacing: 0.5px;
+    /* Local units of the 200-unit viewBox. Spacing is not set here:
+       textLength on the textPath (index.html) fits the string to the full
+       circumference, so the size is chosen so that the natural length is
+       close to it and the spacingAndGlyphs stretch stays small. */
+    font-size: 24px;
     fill: rgb(255 255 255 / 0.9);
   }
 
