@@ -1418,7 +1418,7 @@
 
 /* ==========================================================================
    === About section ===
-   #about ("Rólam"): photo with a scroll-scrubbed neutral -> smile crossfade
+   #about ("Rólam"): photo with a scroll-scrubbed four-frame sequence
    (js/about.js) beside the bio. Light theme — the nav and dot rail flip to
    their light variants via main.js's generic section[data-theme] triggers.
    ========================================================================== */
@@ -1468,9 +1468,12 @@
     display: block;
   }
 
-  /* Revealed 1:1 with scroll by about.js; stays hidden under reduced
-     motion or if its file fails to load. */
-  .about__img--smile { opacity: 0; }
+  /* Photo 1 is the always-opaque base layer; 2-4 stack above it in order
+     and are revealed 1:1 with scroll by about.js. Without JS motion (reduced
+     motion, <768px, low CPU) they stay hidden and photo 1 shows alone. */
+  .about__img--2,
+  .about__img--3,
+  .about__img--4 { opacity: 0; }
 
   .about__eyebrow {
     font-family: var(--font-accent);
@@ -1508,7 +1511,7 @@
      needed beyond spacing. */
   .about__more { margin-top: 32px; }
 
-  /* Both photos failed to load (about.js): drop the photo column and let
+  /* All photos failed to load (about.js): drop the photo column and let
      the text span the full width. */
   #about.about--no-photo .about__inner { grid-template-columns: minmax(0, 1fr); }
   #about.about--no-photo .about__photo { display: none; }

@@ -1,6 +1,6 @@
 /* ==========================================================================
-   about.js — #about ("Rólam"): one-shot entrance + scroll-scrubbed
-              neutral -> smile crossfade on the photo.
+   about.js — #about ("Rólam"): one-shot entrance + a four-photo
+              scroll-scrubbed sequence on the photo.
 
    Loaded after hero.js (which registers the "brand" ease and sets
    VB.ease) and before main.js (which owns Lenis, the section theme
@@ -19,8 +19,9 @@
   if (!section) return;
 
   var photo   = document.getElementById('about-photo');
-  var neutral = section.querySelector('.about__img--neutral');
-  var smile   = section.querySelector('.about__img--smile');
+  var imgs    = [1, 2, 3, 4].map(function (n) {
+    return section.querySelector('.about__img--' + n);
+  });
   var inner   = section.querySelector('.about__inner');
   var textEls = Array.prototype.slice.call(
     section.querySelectorAll('.about__eyebrow, .about__title, .about__bio, .about__more')
@@ -30,7 +31,13 @@
   if (hasGsap) gsap.registerPlugin(ScrollTrigger);
 
   var EASE = VB.ease || 'power2.out';   /* "brand" once hero.js has run */
-  var animate = hasGsap && !VB.reduceMotion;
+
+  /* Same fallback policy as shader.js / stack.js: a narrow viewport or a
+     low-core CPU gets the static first photo, no pin and no sequence. */
+  var lowCpu = typeof navigator.hardwareConcurrency === 'number' &&
+               navigator.hardwareConcurrency < 4;
+  var narrow = window.innerWidth < 768;
+  var animate = hasGsap && !VB.reduceMotion && !lowCpu && !narrow;
 
   /* --------------------------------------------------------------- guards */
 
@@ -52,33 +59,33 @@
     });
   }
 
-  /* ------------------------------------------------------- expression scrub
-     Smile opacity runs 0 -> 1, linear and 1:1 with scroll, while the section
-     is PINNED: the pin starts the moment the section is centred in the
-     viewport and holds for 0.8 of a screen, so the expression change plays
-     out exactly while the visitor is looking straight at the photo.
+  /* --------------------------------------------------------- photo sequence
+     Four frames, three crossfades, driven by the section's PINNED progress
+     p (0..1). Frame 1 is the base layer and is never animated; frames 2-4
+     fade in above it, so there is never an empty box mid-transition:
 
-     Tied to the pin rather than to the photo's travel across the viewport
-     (the first cut of this): measured on the deployed build, the untinned
-     version did run correctly — scrub progress tracked scroll 1:1 — but it
-     finished right as the section settled on screen and lasted only ~1s
-     during a normal flick, and since the two frames differ by nothing but a
-     slight change of expression, the crossfade was effectively invisible.
+        hold 1 | p .18 -> .32 fade 2 | hold 2 | .46 -> .60 fade 3 | hold 3 |
+        .72 -> .86 fade 4 | hold 4
+
+     One timeline of total length 1 on a scrubbed pin, so the bands are
+     literal progress values: position = p. Linear (ease 'none'), no snap.
+     The pin starts the moment the section is centred in the viewport and
+     lasts 2.4 screens, so the sequence plays while the photo is in view.
 
      refreshPriority keeps this pin ahead of main.js's section triggers in
      the refresh order, since the pin spacer shifts everything below it.
      Created up front so it's ready before the images settle; torn down
-     below if the smile file turns out to be missing. */
+     below if any of the four files turns out to be missing. */
+  var BANDS = [[0.18, 0.32], [0.46, 0.60], [0.72, 0.86]];
   var scrub = null;
 
-  if (animate && photo && smile) {
-    scrub = gsap.fromTo(smile, { opacity: 0 }, {
-      opacity: 1,
-      ease: 'none',
+  if (animate && photo && imgs.every(Boolean)) {
+    scrub = gsap.timeline({
+      defaults: { ease: 'none' },
       scrollTrigger: {
         trigger: section,
         start: 'center center',
-        end: function () { return '+=' + Math.round(window.innerHeight * 0.8); },
+        end: function () { return '+=' + Math.round(window.innerHeight * 2.4); },
         pin: true,
         pinSpacing: true,
         anticipatePin: 1,
@@ -87,12 +94,18 @@
         refreshPriority: 1
       }
     });
+    BANDS.forEach(function (band, i) {
+      scrub.fromTo(imgs[i + 1], { opacity: 0 },
+        { opacity: 1, duration: band[1] - band[0] }, band[0]);
+    });
+    /* Pad the timeline out to exactly 1 so its progress equals p. */
+    scrub.set({}, {}, 1);
   }
 
   function killScrub() {
     if (!scrub) return;
     /* kill(true) reverts the pin, removing the spacer it injected — without
-       it the page would keep 0.8 screens of empty scroll for an effect that
+       it the page would keep 2.4 screens of empty scroll for an effect that
        is no longer there. */
     if (scrub.scrollTrigger) scrub.scrollTrigger.kill(true);
     scrub.kill();
@@ -132,30 +145,32 @@
   }
 
   /* ------------------------------------------------------ image fallbacks */
-  Promise.all([settled(neutral), settled(smile)]).then(function (ok) {
-    var neutralOk = ok[0];
-    var smileOk = ok[1];
+  Promise.all(imgs.map(settled)).then(function (ok) {
+    var loaded = ok.filter(Boolean).length;
 
-    if (!neutralOk && !smileOk) {
-      warnOnce('About photos missing — expected assets/img/about-photo-neutral.jpg and ' +
-               'assets/img/about-photo-smile.jpg. Hiding the photo; text spans full width.');
+    if (loaded === 0) {
+      warnOnce('About photos missing — expected assets/img/photo1.jpg .. photo4.jpg. ' +
+               'Hiding the photo; text spans full width.');
       killScrub();
       section.classList.add('about--no-photo');
-    } else if (!smileOk) {
-      warnOnce('About smile photo missing — expected assets/img/about-photo-smile.jpg. ' +
-               'Showing the neutral photo only, no expression scrub.');
+    } else if (loaded < imgs.length) {
+      /* A half-working sequence is worse than a static photo: show the
+         first frame that did load, drop the rest, no scrub. */
+      var first = ok.indexOf(true);
+      warnOnce('Some About photos failed to load — expected assets/img/photo1.jpg .. ' +
+               'photo4.jpg. Showing the first one that loaded, no sequence.');
       killScrub();
-      if (smile) { smile.style.opacity = '0'; smile.style.display = 'none'; }
-    } else if (!neutralOk) {
-      /* Only the smile survived: show it as the (static) photo, carrying
-         the alt text the neutral image would have had. */
-      warnOnce('About neutral photo missing — expected assets/img/about-photo-neutral.jpg. ' +
-               'Showing the smile photo statically, no expression scrub.');
-      killScrub();
-      if (neutral) neutral.style.display = 'none';
-      smile.style.opacity = '1';
-      smile.alt = neutral ? neutral.alt : '';
-      smile.removeAttribute('aria-hidden');
+      imgs.forEach(function (img, i) {
+        if (!img) return;
+        if (i === first) {
+          img.style.opacity = '1';
+          img.alt = imgs[0] ? imgs[0].alt : '';
+          img.removeAttribute('aria-hidden');
+        } else {
+          img.style.opacity = '0';
+          img.style.display = 'none';
+        }
+      });
     }
 
     if (hasGsap) ScrollTrigger.refresh();
