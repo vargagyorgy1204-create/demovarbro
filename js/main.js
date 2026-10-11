@@ -13,8 +13,15 @@
   /* hero.js registers the real --ease-brand curve as "brand". */
   var EASE = VB.ease || 'power2.out';
 
+  /* Register only the plugins that actually loaded — a CDN failure for one
+     of them must not stop the rest of the site (this used to throw and
+     leave the page stuck on the preloader). */
   if (typeof gsap !== 'undefined') {
-    gsap.registerPlugin(ScrollTrigger, SplitText, Flip);
+    var plugins = [];
+    if (typeof ScrollTrigger !== 'undefined') plugins.push(ScrollTrigger);
+    if (typeof SplitText !== 'undefined')     plugins.push(SplitText);
+    if (typeof Flip !== 'undefined')          plugins.push(Flip);
+    if (plugins.length) gsap.registerPlugin.apply(gsap, plugins);
   }
 
   /* ======================================================================
@@ -46,7 +53,7 @@
       easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); }
     });
 
-    lenis.on('scroll', ScrollTrigger.update);
+    if (typeof ScrollTrigger !== 'undefined') lenis.on('scroll', ScrollTrigger.update);
 
     gsap.ticker.add(function (time) {
       lenis.raf(time * 1000);          /* GSAP ticker is in seconds */
@@ -332,6 +339,18 @@
     var dismissRequested = false;
     var finished = false;
     var index = 0;
+
+    /* Watchdog: whatever goes wrong above (a script that failed to load, a
+       stalled scene, an exception mid-animation), the overlay is gone and
+       the page is usable after WATCHDOG ms. */
+    var WATCHDOG = 4500;
+    setTimeout(function () {
+      if (finished) return;
+      finished = true;
+      console.warn('[VarBro] Preloader watchdog fired after ' + WATCHDOG + 'ms — forcing the page open.');
+      overlay.remove();
+      finish();
+    }, WATCHDOG);
 
     /* Both gates must be satisfied: the minimum display time AND the scene. */
     var minTime = new Promise(function (res) { setTimeout(res, MIN_TOTAL); });
