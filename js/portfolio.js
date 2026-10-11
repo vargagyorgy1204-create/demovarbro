@@ -44,13 +44,22 @@
   function typeLabel(p) { return p.type === 'client' ? 'Ügyfélprojekt' : 'Koncepció'; }
 
   /* ------------------------------------------------------------- render */
+  /* The address pill: rendered only when the project has an addressLabel.
+     With an addressHref too it is a link (dialog only, see portfolio-data.js). */
+  function addrHTML(p, asLink) {
+    var inner = '<i data-lucide="lock" class="icon pf-win__lock"></i><span class="pf-addr-text">' + esc(p.addressLabel) + '</span>';
+    if (asLink && p.addressHref) {
+      return '<a class="pf-win__addr pf-win__addr--link" href="' + esc(p.addressHref) + '" target="_blank" rel="noopener">' + inner + '</a>';
+    }
+    return '<span class="pf-win__addr" aria-hidden="true">' + inner + '</span>';
+  }
+
   function windowHTML(p) {
     var m = p.media;
     return '<button type="button" class="pf-win" aria-label="' + esc(p.name) + ' — esettanulmány megnyitása">' +
       '<span class="pf-win__bar">' +
         '<span class="pf-win__dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
-        '<span class="pf-win__addr" aria-hidden="true"><i data-lucide="lock" class="icon pf-win__lock"></i>' +
-          '<span class="pf-addr-text">' + esc(p.addressLabel) + '</span></span>' +
+        (p.addressLabel ? addrHTML(p, false) : '') +
       '</span>' +
       '<span class="pf-win__view">' +
         '<img src="' + esc(m.hero960) + '" srcset="' + esc(m.hero960) + ' 960w, ' + esc(m.hero) + ' 1440w" ' +
@@ -412,7 +421,7 @@
     var counter = document.getElementById('pf-counter');
     var dots    = Array.prototype.slice.call(modal.querySelectorAll('.pf-dot'));
     var imgs    = Array.prototype.slice.call(track.querySelectorAll('img'));
-    var addrs   = Array.prototype.slice.call(track.querySelectorAll('.pf-addr-text'));
+    var bars    = Array.prototype.slice.call(track.querySelectorAll('.pf-win__bar'));
     var stStart = document.getElementById('pf-story-start');
     var stSol   = document.getElementById('pf-story-solution');
     var stRes   = document.getElementById('pf-story-result');
@@ -524,8 +533,11 @@
       shotsOf(p).forEach(function (src, k) {
         imgs[k].src = src;
         imgs[k].alt = p.name + ' — ' + (k + 1) + '. kép';
-        addrs[k].textContent = p.addressLabel;
+        var old = bars[k].querySelector('.pf-win__addr');
+        if (old) old.remove();
+        if (p.addressLabel) bars[k].insertAdjacentHTML('beforeend', addrHTML(p, true));
       });
+      if (typeof lucide !== 'undefined') lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
       track.scrollLeft = 0;
       modal.querySelector('.pf-modal__body').scrollTop = 0;
       paint(0);

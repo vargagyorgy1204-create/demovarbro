@@ -1991,6 +1991,10 @@
   }
   .pf-win__addr .pf-win__lock { flex: none; inline-size: 12px; block-size: 12px; }
   .pf-addr-text { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* link variant — only in the dialog, only when a project has addressLabel + addressHref */
+  .pf-win__addr--link { text-decoration: none; cursor: pointer; transition: color 0.2s ease; }
+  .pf-win__addr--link:hover,
+  .pf-win__addr--link:focus-visible { color: rgb(255 255 255 / 0.9); }
 
   .pf-win__view {
     display: block;

@@ -9,6 +9,14 @@
            "client" -> chip "Ügyfélprojekt"  (real client)
    url     the live demo address. Stored for reference only — it is NOT
            linked anywhere on the page.
+   addressLabel  optional text for the address pill in the browser-window mockup
+                 (e.g. "clientdomain.hu"). Empty string = no pill at all. All
+                 current projects are concept work, so it is empty for them.
+   addressHref   optional. With a label AND an href the pill is a real link
+                 (opens in a new tab) in the case-study dialog; with only a
+                 label it is plain, non-clickable text. (Inside the stacked
+                 cards the whole window is one button, and a link may not
+                 live inside a button — there the pill is always plain text.)
    accent  the project's own brand colour (read from its stylesheet); drives
            the card glow, labels and the dialog glow via --accent.
    ========================================================================== */
@@ -20,7 +28,8 @@ window.PF_PROJECTS = [
     category: 'Luxusingatlan',
     accent: '#E4B15A',
     url: 'https://vargagyorgy1204-create.github.io/aurumbirtok/',
-    addressLabel: 'vargagyorgy1204-create.github.io/aurumbirtok',
+    addressLabel: '',
+    addressHref: '',
     task: 'Egy prémium ingatlanközvetítőnek olyan oldal kell, amely már az első képernyőn exkluzív élményt ad, és méltó módon mutatja be a válogatott ingatlanokat.',
     solution: 'Filmszerű, teljes képernyős képek, elegáns szerif tipográfia, részletes ingatlankártyák és visszafogott, prémium animációk.',
     chips: ['Ingatlankártyák', 'Prémium tipográfia', 'Reszponzív'],
@@ -43,7 +52,8 @@ window.PF_PROJECTS = [
     category: 'Borbély',
     accent: '#C8602A',
     url: 'https://vargagyorgy1204-create.github.io/lakatosgabor/',
-    addressLabel: 'vargagyorgy1204-create.github.io/lakatosgabor',
+    addressLabel: '',
+    addressHref: '',
     task: 'Egy borbélyműhelynek olyan oldal kell, amely első pillantásra átadja a hely hangulatát, és pár kattintással időpontfoglaláshoz vezet.',
     solution: 'Sötét, karakteres dizájn, kiemelt foglalás gomb, galéria a munkákról és átlátható árlista – mobilra optimalizálva.',
     chips: ['Időpontfoglalás', 'Galéria', 'Árlista'],
@@ -66,7 +76,8 @@ window.PF_PROJECTS = [
     category: 'Takarítócég',
     accent: '#14B8A6',
     url: 'https://vargagyorgy1204-create.github.io/fenyes/',
-    addressLabel: 'vargagyorgy1204-create.github.io/fenyes',
+    addressLabel: '',
+    addressHref: '',
     task: 'Egy több városban működő takarítócégnek olyan oldal kell, amely bizalmat épít, és egy helyen mutatja be a szolgáltatásokat és az irodákat.',
     solution: 'Barátságos, letisztult dizájn, irodák és elérhetőségek a fejlécben, szolgáltatáskártyák, vélemények és gyors kapcsolatfelvétel.',
     chips: ['Több iroda', 'Vélemények', 'Gyors kapcsolat'],
@@ -89,7 +100,8 @@ window.PF_PROJECTS = [
     category: 'Takarítás',
     accent: '#3871C1',
     url: 'https://vargagyorgy1204-create.github.io/kitakaritunk/',
-    addressLabel: 'vargagyorgy1204-create.github.io/kitakaritunk',
+    addressLabel: '',
+    addressHref: '',
     task: 'Egy takarítási szolgáltatónak magánszemélyeket és cégeket is meg kell szólítania, mindkettőjüknek a saját ajánlatával.',
     solution: 'Otthon / Iroda váltó, szolgáltatások típusonként rendezve, áttekinthető árak és egyértelmű rendelés gomb.',
     chips: ['Otthon / Iroda váltó', 'Szolgáltatáslista', 'Árak és rendelés'],
@@ -112,7 +124,8 @@ window.PF_PROJECTS = [
     category: 'Ingatlaniroda',
     accent: '#3D68F0',
     url: 'https://vargagyorgy1204-create.github.io/othonkft/',
-    addressLabel: 'vargagyorgy1204-create.github.io/othonkft',
+    addressLabel: '',
+    addressHref: '',
     task: 'Egy ingatlanirodának olyan oldal kell, ahol a látogató azonnal keresni kezdhet az ingatlanok között.',
     solution: 'A hero-ba épített keresősáv, kiemelt ajánlatok, bizalmat építő számok és modern, naplementés hangulatú megjelenés.',
     chips: ['Ingatlankereső', 'Kiemelt ajánlatok', 'Reszponzív'],
@@ -135,7 +148,8 @@ window.PF_PROJECTS = [
     category: 'Fitnesz',
     accent: '#CA8A04',
     url: 'https://vargagyorgy1204-create.github.io/fitass/',
-    addressLabel: 'vargagyorgy1204-create.github.io/fitass',
+    addressLabel: '',
+    addressHref: '',
     task: 'Egy edzőteremnek energikus oldal kell, amely motivál, és bemutatja az edzéslehetőségeket.',
     solution: 'Sötét alap arany kiemelésekkel, elegáns tipográfia, mozgó sávok és az edzéstípusok, edzők áttekinthető bemutatása.',
     chips: ['Edzéstípusok', 'Edzők bemutatása', 'Reszponzív'],
