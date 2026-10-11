@@ -1,14 +1,17 @@
 /* ==========================================================================
-   portfolio.js — #portfolio ("Munkáim"): bento grid of project cards with
-                  hover video loops, a fullscreen Flip-expanded gallery,
-                  and a calm scroll entrance.
+   portfolio.js — #portfolio ("Munkáim"): the stacking case-card deck, the
+                  Instagram card and the case-study dialog.
+
+   Content comes from js/portfolio-data.js (window.PF_PROJECTS); this file
+   renders it, so swapping a project means editing the data file only.
 
    Loaded after stack.js and before main.js, which owns Lenis, the section
-   theme triggers and the dot rail — #portfolio is picked up there from its
-   data-theme, so nothing is wired for the nav or the dots here.
+   theme triggers and the dot rail. main.js exposes VB.setTheme so this file
+   can flip the nav to its dark look while the dark cards are under it.
 
-   Everything works without GSAP/Flip: the grid is plain CSS and a click
-   opens the same gallery with a simple fade (no Flip, no 3D).
+   Stacking = CSS position: sticky + a scrubbed scale/darken on the covered
+   card. There is NO ScrollTrigger pin in this section. Everything degrades:
+   no GSAP -> static blocks; no Flip -> the dialog fades in instead.
    ========================================================================== */
 (function () {
   'use strict';
@@ -19,154 +22,357 @@
   }
 
   var section = document.getElementById('portfolio');
-  var modal   = document.getElementById('pf-modal');
-  if (!section) return;
-
-  var cards = Array.prototype.slice.call(section.querySelectorAll('button.pf-card'));
-  var allCards = Array.prototype.slice.call(section.querySelectorAll('.pf-card'));
+  var deck    = document.getElementById('pf-deck');
+  var data    = window.PF_PROJECTS;
+  if (!section || !deck || !data || !data.length) return;
 
   var hasGsap  = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
   var hasFlip  = hasGsap && typeof Flip !== 'undefined';
   var hasSplit = hasGsap && typeof SplitText !== 'undefined';
-  if (hasGsap) gsap.registerPlugin.apply(gsap, [ScrollTrigger, hasFlip && Flip, hasSplit && SplitText].filter(Boolean));
+  if (hasGsap) {
+    gsap.registerPlugin.apply(gsap, [ScrollTrigger, hasFlip && Flip, hasSplit && SplitText].filter(Boolean));
+  }
 
-  var reduce = VB.reduceMotion;
+  var reduce    = VB.reduceMotion;
   var hoverFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  var EASE = VB.ease || 'power2.out';
+  var EASE      = VB.ease || 'power2.out';
+  var N         = data.length;
 
-  function shotsOf(slug) {
-    return ['assets/portfolio/hero-' + slug + '.jpg',
-            'assets/portfolio/shot-' + slug + '-2.jpg',
-            'assets/portfolio/shot-' + slug + '-3.jpg'];
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function typeLabel(p) { return p.type === 'client' ? 'Ügyfélprojekt' : 'Koncepció'; }
+
+  /* ------------------------------------------------------------- render */
+  function windowHTML(p) {
+    var m = p.media;
+    return '<button type="button" class="pf-win" aria-label="' + esc(p.name) + ' — esettanulmány megnyitása">' +
+      '<span class="pf-win__bar">' +
+        '<span class="pf-win__dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        '<span class="pf-win__addr" aria-hidden="true"><i data-lucide="lock" class="icon pf-win__lock"></i>' +
+          '<span class="pf-addr-text">' + esc(p.addressLabel) + '</span></span>' +
+      '</span>' +
+      '<span class="pf-win__view">' +
+        '<img src="' + esc(m.hero960) + '" srcset="' + esc(m.hero960) + ' 960w, ' + esc(m.hero) + ' 1440w" ' +
+          'sizes="(max-width: 899px) 100vw, 60vw" width="960" height="600" alt="" loading="lazy" decoding="async">' +
+        '<video class="pf-win__video" data-src="' + esc(m.loop) + '" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>' +
+      '</span>' +
+    '</button>';
   }
 
-  /* ----------------------------------------------------------- preloading
-     The gallery's three images are fetched on the first hover/focus so it
-     opens instantly. Kept referenced so they are not collected early. */
-  var preloaded = {};
-  function preload(card) {
-    var slug = card.dataset.slug;
-    if (preloaded[slug]) return;
-    preloaded[slug] = shotsOf(slug).map(function (src) {
-      var im = new Image();
-      im.decoding = 'async';
-      im.src = src;
-      return im;
+  function caseHTML(p, i) {
+    var num = (i < 9 ? '0' : '') + (i + 1) + ' / ' + (N < 10 ? '0' : '') + N;
+    return '<article class="pf-case" data-index="' + i + '" data-slug="' + esc(p.slug) + '" style="--accent:' + esc(p.accent) + '">' +
+      '<div class="pf-case__bgname" aria-hidden="true"><span>' + esc(p.name) + '</span></div>' +
+      '<div class="pf-case__inner">' +
+        '<div class="pf-case__text">' +
+          '<div class="pf-case__meta">' +
+            '<span class="pf-case__num">' + num + '</span>' +
+            '<span class="pf-tag">' + esc(p.category) + '</span>' +
+            '<span class="pf-tag pf-tag--ghost">' + typeLabel(p) + '</span>' +
+          '</div>' +
+          '<h3 class="pf-case__name">' + esc(p.name) + '</h3>' +
+          '<div class="pf-case__block"><h4 class="pf-case__label">A feladat</h4><p>' + esc(p.task) + '</p></div>' +
+          '<div class="pf-case__block"><h4 class="pf-case__label">A megoldás</h4><p>' + esc(p.solution) + '</p></div>' +
+          '<ul class="pf-case__chips">' + p.chips.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+          '<button type="button" class="btn pf-case__btn">Esettanulmány <i data-lucide="arrow-right" class="icon"></i></button>' +
+        '</div>' +
+        '<div class="pf-case__media">' + windowHTML(p) + '</div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  var IG_URL = 'https://www.instagram.com/webdeveloper_varbro';
+  function igHTML() {
+    return '<article class="pf-ig" id="pf-ig">' +
+      '<div class="pf-ig__inner">' +
+        '<svg class="pf-ig__glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
+          '<rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle>' +
+          '<circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>' +
+        '<p class="pf-ig__kicker">Ez csak egy kis ízelítő</p>' +
+        '<h3 class="pf-ig__title">Még több munka az Instagramon</h3>' +
+        '<p class="pf-ig__handle">@webdeveloper_varbro</p>' +
+        '<a class="pf-ig__btn" href="' + IG_URL + '" target="_blank" rel="noopener">Megnézem az Instagramon ' +
+          '<i data-lucide="arrow-up-right" class="icon"></i></a>' +
+      '</div>' +
+    '</article>';
+  }
+
+  deck.innerHTML = data.map(caseHTML).join('') + igHTML();
+
+  var cases = Array.prototype.slice.call(deck.querySelectorAll('.pf-case'));
+  var igCard = document.getElementById('pf-ig');
+  var igBtn  = igCard.querySelector('.pf-ig__btn');
+
+  /* -------------------------------------------------------------- videos
+     One video at a time: the "active" card is the one on top of the deck
+     (stacking) or the most visible one (flow layout). Never in
+     reduced-motion. The src is attached lazily, within a viewport of the
+     card. */
+  var stackOn = false;
+  var activeIdx = -1;
+
+  var vids = cases.map(function (c) {
+    var win = c.querySelector('.pf-win');
+    var v = c.querySelector('.pf-win__video');
+    v.addEventListener('playing', function () { win.classList.add('has-video'); });
+    return v;
+  });
+
+  function ensureSrc(v) {
+    if (!v.getAttribute('src') && v.dataset.src) { v.src = v.dataset.src; v.load(); }
+  }
+
+  function setActive(i) {
+    if (i === activeIdx) return;
+    activeIdx = i;
+    vids.forEach(function (v, k) {
+      var win = v.closest('.pf-win');
+      if (k === i) {
+        ensureSrc(v);
+        v.muted = true;
+        var p = v.play();
+        if (p && p.catch) p.catch(function () { /* autoplay refused: the poster stays */ });
+      } else if (!v.paused) {
+        v.pause();
+        win.classList.remove('has-video');
+      }
     });
   }
 
-  /* ----------------------------------------------------------- video loops
-     Never in reduced-motion. Desktop (hover + fine pointer): play while the
-     card is hovered. Touch: play while the card is >= 60% in view, at most
-     two at once. The src is attached lazily, on first use. */
-  function videoOf(card) { return card.querySelector('.pf-card__video'); }
-
-  function ensureSrc(video) {
-    if (!video.getAttribute('src') && video.dataset.src) {
-      video.src = video.dataset.src;
-      video.load();
-    }
+  var tick = 0;
+  function updateActive() {
+    tick = 0;
+    if (reduce) return;
+    var vh = window.innerHeight, best = -1, bestFrac = 0.5;
+    cases.forEach(function (c, i) {
+      var r = c.getBoundingClientRect();
+      /* lazy source: within a viewport above or below */
+      if (r.top < vh * 2 && r.bottom > -vh) ensureSrc(vids[i]);
+      if (stackOn) {
+        if (r.top <= vh * 0.5 && r.bottom > vh * 0.3) best = i;
+      } else {
+        var vis = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+        var frac = vis / Math.min(r.height, vh);
+        if (frac >= bestFrac) { bestFrac = frac; best = i; }
+      }
+    });
+    setActive(best);
   }
-
-  function playCard(card) {
-    var v = videoOf(card);
-    if (!v) return;
-    ensureSrc(v);
-    v.muted = true;
-    var p = v.play();
-    if (p && p.catch) p.catch(function () { /* autoplay refused: the image stays */ });
-    card.classList.add('is-playing');
-    card._pfHold = false;
-  }
-
-  function stopCard(card) {
-    var v = videoOf(card);
-    card.classList.remove('is-playing');
-    if (!v) return;
-    card._pfHold = true;
-    /* Pause and rewind once the 0.4s fade-out is done — unless it was
-       re-hovered in the meantime. */
-    setTimeout(function () {
-      if (card._pfHold) { v.pause(); try { v.currentTime = 0; } catch (e) { /* not loaded yet */ } }
-    }, 420);
-  }
-
+  function scheduleActive() { if (!tick) tick = requestAnimationFrame(updateActive); }
   if (!reduce) {
-    if (hoverFine) {
-      cards.forEach(function (card) {
-        card.addEventListener('pointerenter', function (e) {
-          if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
-          preload(card);
-          playCard(card);
-        });
-        card.addEventListener('pointerleave', function () { stopCard(card); });
-        card.addEventListener('focus', function () { preload(card); });
-      });
-    } else if ('IntersectionObserver' in window) {
-      var playing = [];
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          var card = en.target;
-          var i = playing.indexOf(card);
-          if (en.isIntersecting && en.intersectionRatio >= 0.6) {
-            if (i === -1) playing.push(card);
-            while (playing.length > 2) stopCard(playing.shift());
-            playCard(card);
-          } else if (i !== -1) {
-            playing.splice(i, 1);
-            stopCard(card);
-          }
-        });
-      }, { threshold: [0, 0.6, 1] });
-      cards.forEach(function (card) {
-        io.observe(card);
-        card.addEventListener('pointerdown', function () { preload(card); }, { passive: true });
-      });
-    }
+    window.addEventListener('scroll', scheduleActive, { passive: true });
+    window.addEventListener('resize', scheduleActive);
+    updateActive();
   }
 
-  /* ----------------------------------------------------- cursor label
-     The site's custom cursor only exists on desktop; the label rides next
-     to it while a project card is hovered. */
-  var label = null;
-  if (hoverFine && !reduce) {
-    label = document.createElement('div');
-    label.className = 'pf-cursor';
-    label.textContent = 'Megnézem';
-    label.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(label);
-    var lx = 0, ly = 0;
-    window.addEventListener('pointermove', function (e) {
-      lx = e.clientX; ly = e.clientY;
-      if (label.classList.contains('is-on')) label.style.transform = 'translate(' + (lx + 22) + 'px,' + (ly + 22) + 'px)';
-    }, { passive: true });
-    cards.forEach(function (card) {
-      card.addEventListener('pointerenter', function () {
-        if (!document.body.classList.contains('has-cursor')) return;
-        label.style.transform = 'translate(' + (lx + 22) + 'px,' + (ly + 22) + 'px)';
-        label.classList.add('is-on');
+  /* ------------------------------------------------------ magnetic button */
+  if (hasGsap && hoverFine && !reduce) {
+    var qx = gsap.quickTo(igBtn, 'x', { duration: 0.4, ease: 'power3.out' });
+    var qy = gsap.quickTo(igBtn, 'y', { duration: 0.4, ease: 'power3.out' });
+    igBtn.addEventListener('pointermove', function (e) {
+      var r = igBtn.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2);
+      var dy = e.clientY - (r.top + r.height / 2);
+      var d = Math.sqrt(dx * dx + dy * dy) || 1;
+      var m = Math.min(8, d);                       /* max 8px pull */
+      qx(dx / d * m); qy(dy / d * m);
+    });
+    igBtn.addEventListener('pointerleave', function () { qx(0); qy(0); });
+  }
+
+  /* -------------------------------------------------------- stacking + parallax */
+  if (hasGsap) {
+    var mm = gsap.matchMedia();
+    mm.add('(min-width: 900px) and (min-height: 560px) and (prefers-reduced-motion: no-preference)', function () {
+      stackOn = true;
+      scheduleActive();
+
+      var all = cases.concat(igCard ? [igCard] : []);
+      all.forEach(function (card, i) {
+        var next = all[i + 1];
+        if (next) {
+          /* covered card: scales down and darkens while the next one slides over it */
+          gsap.fromTo(card,
+            { scale: 1, filter: 'brightness(1)' },
+            {
+              scale: 0.92, filter: 'brightness(0.55)', ease: 'none', transformOrigin: '50% 0%',
+              scrollTrigger: { trigger: next, start: 'top bottom', end: 'top 16px', scrub: true }
+            });
+        }
+        var bg = card.querySelector('.pf-case__bgname span');
+        if (bg) {
+          gsap.fromTo(bg, { xPercent: 8 }, {
+            xPercent: -8, ease: 'none',
+            scrollTrigger: {
+              trigger: card, start: 'top bottom',
+              endTrigger: next || deck, end: next ? 'top 16px' : 'bottom bottom',
+              scrub: true
+            }
+          });
+        }
       });
-      card.addEventListener('pointerleave', function () { label.classList.remove('is-on'); });
+
+      return function () { stackOn = false; scheduleActive(); };
     });
   }
 
-  /* ------------------------------------------------------------- gallery */
-  if (modal) initGallery();
+  /* ---------------------------------------------------- entrance per card */
+  var reveals = [];
 
-  function initGallery() {
+  if (hasGsap) {
+    var plain = reduce;                       /* opacity-only reveals */
+
+    cases.forEach(function (c) {
+      var r = {
+        meta:  c.querySelector('.pf-case__meta'),
+        name:  c.querySelector('.pf-case__name'),
+        paras: Array.prototype.slice.call(c.querySelectorAll('.pf-case__block')),
+        chips: Array.prototype.slice.call(c.querySelectorAll('.pf-case__chips li')),
+        btn:   c.querySelector('.pf-case__btn'),
+        win:   c.querySelector('.pf-win'),
+        lines: []
+      };
+      var textBits = [r.name].concat(r.paras);
+      if (hasSplit && !plain) {
+        textBits.forEach(function (el) {
+          var target = el.tagName === 'DIV' ? el.querySelector('p') : el;
+          var sp = SplitText.create(target, { type: 'lines', linesClass: 'pf-line' });
+          r.lines = r.lines.concat(sp.lines);
+          el._split = sp;
+        });
+        r.labels = r.paras.map(function (b) { return b.querySelector('.pf-case__label'); });
+      } else {
+        r.lines = textBits;
+      }
+      r.fade = [r.meta].concat(r.labels || []);
+
+      if (plain) {
+        gsap.set([r.meta, r.btn, r.win].concat(r.lines, r.chips), { opacity: 0 });
+      } else {
+        gsap.set(r.lines, { y: 30, opacity: 0 });
+        gsap.set(r.fade, { y: 14, opacity: 0 });
+        gsap.set(r.chips, { scale: 0.8, opacity: 0 });
+        gsap.set(r.btn, { y: 14, opacity: 0 });
+        gsap.set(r.win, { y: 40, rotationX: 6, opacity: 0, transformPerspective: 1200, transformOrigin: '50% 100%' });
+      }
+
+      var done = false;
+      function play() {
+        if (done) return;
+        done = true;
+        var tl = gsap.timeline({ defaults: { ease: EASE } });
+        if (plain) {
+          tl.to([r.meta].concat(r.lines), { opacity: 1, duration: 0.5, stagger: 0.06 })
+            .to([r.win, r.btn].concat(r.chips), { opacity: 1, duration: 0.5, stagger: 0.04 }, 0.1);
+          return;
+        }
+        tl.to(r.fade, { y: 0, opacity: 1, duration: 0.6, stagger: 0.05 })
+          .to(r.lines, {
+            y: 0, opacity: 1, duration: 0.75, stagger: 0.06,
+            onComplete: function () { textBits.forEach(function (el) { if (el._split) el._split.revert(); }); }
+          }, 0.05)
+          .to(r.chips, { scale: 1, opacity: 1, duration: 0.45, stagger: 0.05, ease: 'back.out(1.7)' }, 0.35)
+          .to(r.btn, { y: 0, opacity: 1, duration: 0.5 }, 0.5)
+          .to(r.win, { y: 0, rotationX: 0, opacity: 1, duration: 0.9, ease: 'power3.out',
+                       onComplete: function () { gsap.set(r.win, { clearProps: 'transform' }); } }, 0.1);
+      }
+
+      ScrollTrigger.create({
+        trigger: c, start: 'top 70%', once: true,
+        onEnter: play,
+        /* a reload restored below the card lands past the start — still reveal */
+        onLeave: play
+      });
+    });
+
+    /* Section header: headline words, then eyebrow and subtitle. */
+    var eyebrow = section.querySelector('.pf__eyebrow');
+    var title   = section.querySelector('.pf__title');
+    var sub     = section.querySelector('.pf__sub');
+    var headDone = false;
+    var words = null;
+
+    function setupHead() {
+      if (hasSplit && !reduce) {
+        words = SplitText.create(title, { type: 'words', aria: 'auto' }).words;
+        gsap.set(words, { y: 40, opacity: 0 });
+        gsap.set([eyebrow, sub], { y: 24, opacity: 0 });
+      } else {
+        words = [title];
+        gsap.set([eyebrow, title, sub], { opacity: 0 });
+      }
+      function reveal() {
+        if (headDone) return;
+        headDone = true;
+        var t = reduce ? { opacity: 1, duration: 0.5 } : { y: 0, opacity: 1, duration: 0.8, ease: EASE };
+        gsap.to([eyebrow, sub], Object.assign({ stagger: 0.1 }, t));
+        gsap.to(words, Object.assign({ stagger: 0.06 }, t));
+      }
+      ScrollTrigger.create({
+        trigger: section.querySelector('.pf__head'), start: 'top 82%', once: true,
+        onEnter: reveal, onLeave: reveal
+      });
+    }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(setupHead); else setupHead();
+
+    /* The nav sits over dark cards while the deck is on screen. Created only
+       once main.js has built its generic section triggers (it does that when
+       the preloader finishes): ScrollTrigger runs triggers in creation
+       order, and this one has to win over #portfolio's own "light" one. */
+    var deckThemeMade = false;
+    function makeDeckTheme() {
+      if (deckThemeMade) return;
+      deckThemeMade = true;
+      ScrollTrigger.create({
+        trigger: deck, start: 'top 46px', end: 'bottom 46px',
+        onToggle: function (self) { if (VB.setTheme) VB.setTheme(self.isActive ? 'dark' : 'light'); }
+      });
+    }
+    if (document.body.classList.contains('is-loaded')) {
+      setTimeout(makeDeckTheme, 0);
+    } else {
+      new MutationObserver(function (_, obs) {
+        if (document.body.classList.contains('is-loaded')) { obs.disconnect(); setTimeout(makeDeckTheme, 0); }
+      }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    /* Re-measure once images and fonts have settled; card sizes are fixed
+       by CSS, but the section sits below two pins. */
+    var raf = 0;
+    var refresh = function () {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function () { ScrollTrigger.refresh(); });
+    };
+    Array.prototype.forEach.call(deck.querySelectorAll('.pf-win__view img'), function (im) {
+      if (!im.complete) im.addEventListener('load', refresh, { once: true });
+    });
+    window.addEventListener('load', refresh, { once: true });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
+  }
+
+  /* ----------------------------------------------------------- dialog */
+  var modal = document.getElementById('pf-modal');
+  if (modal) initDialog();
+
+  function initDialog() {
     var panel   = document.getElementById('pf-panel');
     var inner   = document.getElementById('pf-inner');
     var scrim   = modal.querySelector('.pf-modal__scrim');
     var track   = document.getElementById('pf-track');
     var titleEl = document.getElementById('pf-modal-title');
-    var chipEl  = document.getElementById('pf-modal-chip');
-    var descEl  = document.getElementById('pf-modal-desc');
+    var catEl   = document.getElementById('pf-modal-cat');
+    var typeEl  = document.getElementById('pf-modal-type');
     var closeB  = document.getElementById('pf-close');
     var prevB   = document.getElementById('pf-prev');
     var nextB   = document.getElementById('pf-next');
     var counter = document.getElementById('pf-counter');
     var dots    = Array.prototype.slice.call(modal.querySelectorAll('.pf-dot'));
     var imgs    = Array.prototype.slice.call(track.querySelectorAll('img'));
+    var addrs   = Array.prototype.slice.call(track.querySelectorAll('.pf-addr-text'));
+    var stStart = document.getElementById('pf-story-start');
+    var stSol   = document.getElementById('pf-story-solution');
+    var stRes   = document.getElementById('pf-story-result');
     var COUNT   = imgs.length;
 
     var fancy = hasFlip && !reduce;          /* Flip + 3D entrance */
@@ -174,12 +380,26 @@
 
     if (!fancy) modal.classList.add('pf-modal--fade');
 
-    /* --- slide helpers --- */
+    function shotsOf(p) { return [p.media.hero].concat(p.media.shots); }
+
+    /* Gallery images are fetched on the first hover/focus so it opens instantly. */
+    var preloaded = {};
+    function preload(i) {
+      if (preloaded[i]) return;
+      preloaded[i] = shotsOf(data[i]).map(function (src) { var im = new Image(); im.decoding = 'async'; im.src = src; return im; });
+    }
+    cases.forEach(function (c, i) {
+      var go = function () { preload(i); };
+      c.addEventListener('pointerenter', go, { once: true });
+      c.addEventListener('focusin', go, { once: true });
+      c.addEventListener('pointerdown', go, { once: true, passive: true });
+    });
+
+    /* --- slides --- */
     function currentIndex() {
       var w = track.clientWidth || 1;
       return Math.max(0, Math.min(COUNT - 1, Math.round(track.scrollLeft / w)));
     }
-
     function paint(i) {
       index = i;
       counter.textContent = (i + 1) + ' / ' + COUNT;
@@ -190,18 +410,15 @@
       prevB.disabled = i === 0;
       nextB.disabled = i === COUNT - 1;
     }
-
     function go(i, instant) {
       i = Math.max(0, Math.min(COUNT - 1, i));
       track.scrollTo({ left: i * track.clientWidth, behavior: (instant || reduce) ? 'auto' : 'smooth' });
       paint(i);
     }
-
     track.addEventListener('scroll', function () {
       var i = currentIndex();
       if (i !== index) paint(i);
     }, { passive: true });
-
     prevB.addEventListener('click', function () { go(index - 1); });
     nextB.addEventListener('click', function () { go(index + 1); });
     dots.forEach(function (d, k) { d.addEventListener('click', function () { go(k); }); });
@@ -251,22 +468,27 @@
       }
     }
 
-    /* --- fill --- */
-    function fill(card) {
-      var slug = card.dataset.slug;
-      var name = card.querySelector('.pf-card__name').textContent;
-      titleEl.textContent = name;
-      chipEl.textContent = card.dataset.cat;
-      descEl.textContent = card.dataset.desc;
-      shotsOf(slug).forEach(function (src, i) {
-        imgs[i].src = src;
-        imgs[i].alt = i === 0 ? name + ' — főoldal' : name + ' — ' + (i + 1) + '. kép';
+    /* --- fill from the data file --- */
+    function fill(i) {
+      var p = data[i];
+      modal.style.setProperty('--accent', p.accent);
+      titleEl.textContent = p.name;
+      catEl.textContent = p.category;
+      typeEl.textContent = typeLabel(p);
+      stStart.textContent = p.caseStudy.start;
+      stSol.textContent = p.caseStudy.solution;
+      stRes.textContent = p.caseStudy.result;
+      shotsOf(p).forEach(function (src, k) {
+        imgs[k].src = src;
+        imgs[k].alt = p.name + ' — ' + (k + 1) + '. kép';
+        addrs[k].textContent = p.addressLabel;
       });
       track.scrollLeft = 0;
+      modal.querySelector('.pf-modal__body').scrollTop = 0;
       paint(0);
     }
 
-    /* --- panel <-> card rect (Flip works on the panel's own box) --- */
+    /* --- panel <-> opener rect (Flip works on the panel's own box) --- */
     function pinPanelTo(rect) {
       var s = panel.style;
       s.inset = 'auto';
@@ -274,7 +496,7 @@
       s.left = rect.left + 'px';
       s.width = rect.width + 'px';
       s.height = rect.height + 'px';
-      s.borderRadius = '28px';
+      s.borderRadius = '14px';
     }
     function releasePanel() {
       var s = panel.style;
@@ -289,10 +511,10 @@
     }
 
     /* --- open --- */
-    function open(card) {
+    function open(i, from) {
       if (isOpen || busy) return;
-      isOpen = true; opener = card;
-      fill(card);
+      isOpen = true; opener = from;
+      fill(i);
       lock();
       modal.hidden = false;
 
@@ -306,7 +528,7 @@
       busy = true;
       gsap.set(scrim, { opacity: 0 });
       gsap.set(inner, { opacity: 0, rotationX: 8, y: 24, transformPerspective: 1400 });
-      pinPanelTo(card.getBoundingClientRect());
+      pinPanelTo(from.getBoundingClientRect());
       var state = Flip.getState(panel, { props: 'borderRadius' });
       releasePanel();
       Flip.from(state, {
@@ -355,8 +577,9 @@
       gsap.to(scrim, { opacity: 0, duration: 0.45, delay: 0.15, ease: 'power2.in' });
     }
 
-    cards.forEach(function (card) {
-      card.addEventListener('click', function () { open(card); });
+    cases.forEach(function (c, i) {
+      c.querySelector('.pf-win').addEventListener('click', function (e) { open(i, e.currentTarget); });
+      c.querySelector('.pf-case__btn').addEventListener('click', function (e) { open(i, e.currentTarget); });
     });
     closeB.addEventListener('click', close);
     modal.querySelector('[data-pf-close]').addEventListener('click', close);
@@ -377,80 +600,5 @@
     });
 
     VB.portfolio = { open: open, close: close, isOpen: function () { return isOpen; } };
-  }
-
-  /* ------------------------------------------------------------- entrance
-     Headline words, then the cards in batches, once. Transforms and opacity
-     only, on boxes whose size is already fixed by the grid, so CLS stays 0.
-     No pin, so nothing here moves the Stack/Services triggers. */
-  if (hasGsap && !reduce) {
-    var eyebrow = section.querySelector('.pf__eyebrow');
-    var title   = section.querySelector('.pf__title');
-    var sub     = section.querySelector('.pf__sub');
-
-    gsap.set(allCards, { y: 60, scale: 0.96, opacity: 0 });
-    gsap.set([eyebrow, sub], { y: 24, opacity: 0 });
-
-    var shown = [];
-    function showCards(batch) {
-      var fresh = batch.filter(function (c) { return shown.indexOf(c) === -1; });
-      if (!fresh.length) return;
-      shown = shown.concat(fresh);
-      gsap.to(fresh, {
-        y: 0, scale: 1, opacity: 1, duration: 0.8, ease: EASE, stagger: 0.08,
-        /* hand the transform back to CSS so the hover lift works */
-        onComplete: function () { gsap.set(fresh, { clearProps: 'transform,opacity' }); }
-      });
-    }
-    ScrollTrigger.batch(allCards, {
-      start: 'top 90%',
-      once: true,
-      onEnter: showCards,
-      /* a reload restored below the section lands past the start without
-         crossing it — still reveal rather than stay hidden */
-      onLeave: showCards
-    });
-
-    function headline() {
-      var words = null;
-      if (hasSplit) {
-        var split = SplitText.create(title, { type: 'words', aria: 'auto' });
-        words = split.words;
-        gsap.set(words, { y: 40, opacity: 0 });
-      } else {
-        words = [title];
-        gsap.set(title, { y: 40, opacity: 0 });
-      }
-      ScrollTrigger.create({
-        trigger: section.querySelector('.pf__head'),
-        start: 'top 82%',
-        once: true,
-        onEnter: reveal,
-        onLeave: reveal
-      });
-      var done = false;
-      function reveal() {
-        if (done) return;
-        done = true;
-        gsap.to([eyebrow, sub], { y: 0, opacity: 1, duration: 0.7, ease: EASE, stagger: 0.1 });
-        gsap.to(words, { y: 0, opacity: 1, duration: 0.8, ease: EASE, stagger: 0.06 });
-      }
-    }
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(headline); else headline();
-  }
-
-  /* ----------------------------------------------- positions after images
-     Card sizes are fixed by the grid, but the section sits below two pins,
-     so re-measure once everything has settled. */
-  if (hasGsap) {
-    var raf = 0;
-    var refresh = function () {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(function () { ScrollTrigger.refresh(); });
-    };
-    Array.prototype.forEach.call(section.querySelectorAll('.pf-card__img'), function (im) {
-      if (!im.complete) im.addEventListener('load', refresh, { once: true });
-    });
-    window.addEventListener('load', refresh, { once: true });
   }
 })();

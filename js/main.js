@@ -112,6 +112,9 @@
     if (nav) nav.classList.toggle('nav--on-light', onLight);
     if (dotsRail) dotsRail.classList.toggle('dots--on-light', onLight);
   }
+  /* Lets a section override the theme for part of itself — #portfolio is a
+     light section whose dark case cards sit under the nav. */
+  VB.setTheme = applyTheme;
 
   /* ======================================================================
      Fullscreen menu

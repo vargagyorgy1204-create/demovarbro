@@ -1844,14 +1844,19 @@
 
 /* ==========================================================================
    === Portfolio section ===
-   #portfolio ("Munkáim"): light bento grid of 6 project cards + an
-   Instagram card (js/portfolio.js). Hover plays a muted webm loop over the
-   screenshot; click opens a fullscreen gallery (#pf-modal). Not pinned.
+   #portfolio ("Munkáim"): "stacking cases". Every project is one dark,
+   viewport-tall card floating on the light section. The cards are
+   position: sticky — the next one scrolls up and covers the previous, which
+   scales down and darkens (scrubbed in js/portfolio.js; no pin anywhere in
+   this section). Card content is rendered from js/portfolio-data.js.
+
+   Stacking is on only for >= 900px wide, >= 560px tall, no reduced-motion.
+   Everywhere else the same cards are ordinary stacked blocks.
    ========================================================================== */
 @layer portfolio {
 
   #portfolio {
-    padding-block: clamp(80px, 12vh, 140px);
+    padding-block: clamp(80px, 12vh, 140px) clamp(56px, 9vh, 110px);
     background: var(--card-secondary-light);
   }
 
@@ -1888,52 +1893,100 @@
     color: color-mix(in srgb, var(--card-secondary) 62%, transparent);
   }
 
-  /* ---------- Bento grid ----------
-     12 columns. Row height is a fixed function of the viewport width, so
-     every card has its final size before any image arrives (no CLS).
-     Desktop plan (no holes):
-        r1-2  Aurum (6x2)        | Lakatos (6x1)
-                                 | Fényes  (6x1)
-        r3-4  Othon (6x2)        | Kitakarítunk (6x1)
-                                 | Fitass (3x1) | Instagram (3x1)  */
-  .pf-grid {
-    /* Four rows + gutters = 4*row + 48px: 868px at 1440, so the whole grid
-       fits a 900px-tall viewport. */
-    --pf-row: clamp(170px, 14.2vw, 205px);
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-auto-rows: var(--pf-row);
-    gap: 16px;
+  /* ---------- Deck ---------- */
+  .pf-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-inline: 16px;
   }
 
-  .pf-grid > [data-slug="aurum"]        { grid-area: 1 / 1 / 3 / 7; }
-  .pf-grid > [data-slug="lakatos"]      { grid-area: 1 / 7 / 2 / 13; }
-  .pf-grid > [data-slug="fenyes"]       { grid-area: 2 / 7 / 3 / 13; }
-  .pf-grid > [data-slug="kitakaritunk"] { grid-area: 3 / 7 / 4 / 13; }
-  .pf-grid > [data-slug="othon"]        { grid-area: 3 / 1 / 5 / 7; }
-  .pf-grid > [data-slug="fitass"]       { grid-area: 4 / 7 / 5 / 10; }
-  .pf-grid > [data-slug="instagram"]    { grid-area: 4 / 10 / 5 / 13; }
-
-  /* ---------- Card ---------- */
-  .pf-card {
-    position: relative;
-    display: block;
-    padding: 0;
-    border: 0;
-    border-radius: 28px;
-    overflow: hidden;
-    isolation: isolate;
-    background: var(--card-secondary);
+  /* ---------- Shared bits ---------- */
+  .pf-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    font-family: var(--font-accent);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    line-height: 1.3;
     color: var(--pure-white);
+    background: rgb(255 255 255 / 0.1);
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pf-tag--ghost {
+    background: transparent;
+    color: rgb(255 255 255 / 0.55);
+    border-color: rgb(255 255 255 / 0.3);
+  }
+
+  /* Browser-window mockup (cards and dialog). */
+  .pf-win {
+    display: block;
+    inline-size: 100%;
+    margin-inline: auto;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #0b0c12;
+    color: inherit;
     text-align: start;
     cursor: pointer;
-    container-type: inline-size;
-    box-shadow: 0 10px 30px -18px color-mix(in srgb, var(--card-secondary) 55%, transparent);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    box-shadow:
+      0 40px 80px -30px color-mix(in srgb, var(--accent, #6c63ff) 45%, transparent),
+      0 20px 40px -20px rgb(0 0 0 / 0.5);
+  }
+  .pf-win--static { cursor: inherit; }
+  .pf-win:focus-visible { outline: 3px solid var(--accent, var(--card-primary-a)); outline-offset: 4px; }
+
+  .pf-win__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    block-size: 36px;
+    padding-inline: 14px;
+    background: #1d1f2b;
   }
 
-  .pf-card__img,
-  .pf-card__video {
+  .pf-win__dots { display: flex; gap: 7px; flex: none; }
+  .pf-win__dots i { display: block; inline-size: 10px; block-size: 10px; border-radius: 999px; }
+  .pf-win__dots i:nth-child(1) { background: #ff5f57; }
+  .pf-win__dots i:nth-child(2) { background: #febc2e; }
+  .pf-win__dots i:nth-child(3) { background: #28c840; }
+
+  .pf-win__addr {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 66%;
+    margin-inline: auto;
+    padding: 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.06);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: 1.2;
+    color: rgb(255 255 255 / 0.55);
+  }
+  .pf-win__addr .pf-win__lock { flex: none; inline-size: 12px; block-size: 12px; }
+  .pf-addr-text { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .pf-win__view {
+    display: block;
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #0b0c12;
+  }
+  .pf-win__view--contain { aspect-ratio: 16 / 10; }
+
+  .pf-win__view img,
+  .pf-win__video {
     position: absolute;
     inset: 0;
     inline-size: 100%;
@@ -1942,167 +1995,280 @@
     object-position: top center;
     display: block;
   }
+  .pf-win__view--contain img { object-fit: contain; }
 
-  .pf-card__video { opacity: 0; transition: opacity 0.4s ease; }
-  .pf-card.is-playing .pf-card__video { opacity: 1; }
+  .pf-win__video { opacity: 0; transition: opacity 0.4s ease; }
+  .pf-win.has-video .pf-win__video { opacity: 1; }
 
-  .pf-card__shade {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgb(10 10 20 / 0.82) 0%, rgb(10 10 20 / 0.35) 38%, transparent 62%);
-    pointer-events: none;
+  /* ---------- Case card (flow / mobile layout) ---------- */
+  .pf-case {
+    --pf-pad: 20px;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 24px;
+    color: var(--pure-white);
+    background:
+      radial-gradient(ellipse 70% 80% at 75% 40%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+      #12131c;
+    transform-origin: 50% 0;
   }
 
-  .pf-card__idx {
+  .pf-case__bgname {
     position: absolute;
-    inset-block-start: 18px;
-    inset-inline-start: 20px;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    translate: 0 -50%;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(80px, 13vw, 240px);
+    line-height: 1;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.055);
+  }
+  .pf-case__bgname span { display: inline-block; margin-inline-start: -1vw; }
+
+  .pf-case__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: var(--pf-pad);
+    box-sizing: border-box;
+  }
+
+  /* One column on small screens: number + chips, name, window, task,
+     solution, chips, button. */
+  .pf-case__text { display: contents; }
+  .pf-case__meta   { order: 1; }
+  .pf-case__name   { order: 2; }
+  .pf-case__media  { order: 3; min-inline-size: 0; }
+  .pf-case__block  { order: 4; }
+  .pf-case__chips  { order: 5; }
+  .pf-case__btn    { order: 6; }
+
+  .pf-case__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+  }
+
+  .pf-case__num {
     font-family: var(--font-accent);
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 1.5px;
-    color: rgb(255 255 255 / 0.95);
-    /* A dark pill, so the number reads over light screenshots too. */
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: rgb(10 10 20 / 0.5);
-    backdrop-filter: blur(6px);
+    color: rgb(255 255 255 / 0.6);
+    margin-inline-end: 4px;
   }
 
-  .pf-card__meta {
-    position: absolute;
-    inset-inline: 22px;
-    inset-block-end: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .pf-card__name {
+  .pf-case__name {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(20px, 1.9vw, 28px);
-    line-height: 1.1;
+    font-weight: 800;
+    font-size: clamp(28px, min(3.6vw, 6.2svh), 56px);
+    line-height: 1.05;
     color: var(--pure-white);
   }
 
-  .pf-chip {
-    display: inline-block;
-    padding: 4px 11px;
+  .pf-case__label {
     font-family: var(--font-accent);
-    font-weight: 500;
+    font-weight: 600;
     font-size: 11px;
-    letter-spacing: 0.8px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
-    color: var(--pure-white);
-    background: rgb(255 255 255 / 0.16);
-    border: 1px solid rgb(255 255 255 / 0.28);
+    color: var(--accent);
+    margin-block-end: 5px;
+  }
+
+  .pf-case__block p {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(13px, min(1.15vw, 2.3svh), 16px);
+    line-height: 1.55;
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .pf-case__chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .pf-case__chips li {
+    padding: 5px 13px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.3;
+    color: rgb(255 255 255 / 0.85);
+    border: 1px solid rgb(255 255 255 / 0.2);
     border-radius: 999px;
-    backdrop-filter: blur(6px);
   }
 
-  /* Space is tight: image and name stay, chip and index go first. */
-  @container (max-width: 260px) {
-    .pf-card__idx { display: none; }
-    .pf-card__name { font-size: 20px; }
-  }
-  @container (max-width: 200px) {
-    .pf-chip { display: none; }
-  }
-
-  .pf-card:focus-visible { outline: 3px solid var(--card-primary-a); outline-offset: 3px; }
-
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .pf-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 26px 50px -22px color-mix(in srgb, var(--card-secondary) 70%, transparent);
-    }
+  .pf-case__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    align-self: flex-start;
   }
 
   /* ---------- Instagram card ---------- */
-  .pf-card--ig {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 22px;
-    background: var(--card-primary);
-    text-decoration: none;
-  }
-
-  .pf-card--ig::before {
-    content: "";
-    position: absolute;
-    inset: -30%;
-    z-index: -1;
-    background: radial-gradient(circle at 70% 25%, rgb(255 255 255 / 0.35), transparent 55%);
-    opacity: 0.45;
-    transition: opacity 0.4s ease;
-  }
-  .pf-card--ig:hover::before,
-  .pf-card--ig:focus-visible::before { opacity: 1; }
-
-  .pf-ig__glyph {
+  .pf-ig {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 24px;
+    min-block-size: 420px;
+    padding: 40px 24px;
     display: grid;
     place-items: center;
-    inline-size: 48px;
-    block-size: 48px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.18);
-    border: 1px solid rgb(255 255 255 / 0.3);
+    text-align: center;
+    color: var(--pure-white);
+    background: var(--card-primary);
+    transform-origin: 50% 0;
   }
 
-  .pf-ig__text { display: flex; flex-direction: column; gap: 6px; max-inline-size: calc(100% - 40px); }
+  /* Slowly drifting soft glow. */
+  .pf-ig::before,
+  .pf-ig::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inline-size: 70%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .pf-ig::before {
+    inset-block-start: -25%;
+    inset-inline-start: -10%;
+    background: radial-gradient(circle, rgb(255 255 255 / 0.55), transparent 65%);
+    animation: pfGlowA 16s ease-in-out infinite alternate;
+  }
+  .pf-ig::after {
+    inset-block-end: -35%;
+    inset-inline-end: -10%;
+    background: radial-gradient(circle, #4B1956, transparent 65%);
+    animation: pfGlowB 20s ease-in-out infinite alternate;
+  }
+  @keyframes pfGlowA { to { transform: translate(30%, 22%) scale(1.15); } }
+  @keyframes pfGlowB { to { transform: translate(-28%, -20%) scale(1.2); } }
+
+  .pf-ig__inner { display: flex; flex-direction: column; align-items: center; gap: 14px; max-inline-size: 900px; }
+
+  .pf-ig__glyph { inline-size: 56px; block-size: 56px; color: rgb(255 255 255 / 0.9); }
+
+  .pf-ig__kicker {
+    font-family: var(--font-body);
+    font-size: clamp(14px, 1.2vw, 17px);
+    color: rgb(255 255 255 / 0.7);
+  }
 
   .pf-ig__title {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(17px, 1.5vw, 22px);
-    line-height: 1.2;
+    font-weight: 800;
+    font-size: clamp(36px, 5vw, 80px);
+    line-height: 1.05;
+    color: var(--pure-white);
   }
 
   .pf-ig__handle {
     font-family: var(--font-accent);
     font-weight: 500;
-    font-size: 14px;
-    opacity: 0.85;
+    font-size: clamp(15px, 1.4vw, 20px);
+    letter-spacing: 0.5px;
+    color: rgb(255 255 255 / 0.9);
   }
 
-  .pf-ig__arrow {
-    position: absolute;
-    inset-block-end: 22px;
-    inset-inline-end: 22px;
-    transition: translate 0.3s ease;
-  }
-  .pf-card--ig:hover .pf-ig__arrow { translate: 3px -3px; }
-
-  @container (max-width: 240px) {
-    .pf-ig__glyph { inline-size: 40px; block-size: 40px; }
-    .pf-ig__handle { font-size: 12px; }
-  }
-
-  /* ---------- Cursor label ("Megnézem") ---------- */
-  .pf-cursor {
-    position: fixed;
-    inset-block-start: 0;
-    inset-inline-start: 0;
-    z-index: calc(var(--z-cursor) - 1);
-    padding: 7px 14px;
+  .pf-ig__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-block-start: 8px;
+    padding: 14px 32px;
     font-family: var(--font-accent);
     font-weight: 500;
-    font-size: 13px;
+    font-size: 15px;
     letter-spacing: 0.5px;
+    line-height: 1.2;
     color: var(--pure-white);
-    background: var(--card-primary);
+    text-decoration: none;
+    border: 1.5px solid var(--pure-white);
     border-radius: 999px;
-    pointer-events: none;
-    opacity: 0;
-    scale: 0.85;
-    transition: opacity 0.2s ease, scale 0.2s ease;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color var(--dur) ease, color var(--dur) ease, border-color var(--dur) ease;
   }
-  .pf-cursor.is-on { opacity: 1; scale: 1; }
+  .pf-ig__btn:hover,
+  .pf-ig__btn:focus-visible { background: var(--pure-white); color: #4B1956; }
+  .pf-ig__btn:focus-visible { outline: 3px solid var(--pure-white); outline-offset: 3px; }
 
-  /* ---------- Fullscreen gallery ---------- */
+  /* ---------- Desktop: two columns ---------- */
+  @media (min-width: 900px) and (min-height: 560px) {
+    /* Horizontal padding follows the width, vertical follows the height, so
+       a short laptop screen (1097x617) keeps room for the longest text. */
+    .pf-case { --pf-pad: clamp(24px, 4vw, 64px); --pf-padv: clamp(16px, 4.6svh, 64px); border-radius: 32px; }
+
+    .pf-case__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+      column-gap: 4vw;
+      align-items: center;
+      padding-block: var(--pf-padv);
+      /* keeps the text clear of the fixed nav logo in the top-left corner */
+      padding-inline-start: max(var(--pf-pad), 84px);
+    }
+
+    .pf-case__text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: clamp(7px, 1.7svh, 20px);
+      min-inline-size: 0;
+    }
+
+    /* short screens: slightly tighter chips and button */
+    @media (max-height: 700px) {
+      .pf-case__name { font-size: clamp(26px, 2.7vw, 40px); }
+      .pf-case__chips li { padding: 4px 11px; font-size: 12px; }
+      .pf-case__btn { padding: 11px 26px; font-size: 14px; }
+    }
+
+    /* order only matters in the one-column layout */
+    .pf-case__meta, .pf-case__name, .pf-case__media, .pf-case__block, .pf-case__chips, .pf-case__btn { order: 0; }
+
+    .pf-case__media { display: flex; align-items: center; }
+
+    /* The window keeps its size first: it never grows taller than the card. */
+    .pf-case .pf-win {
+      max-inline-size: calc((100svh - 32px - 2 * var(--pf-padv) - 36px) * 16 / 9);
+    }
+
+    .pf-ig { border-radius: 32px; }
+  }
+
+  /* ---------- Stacking: the sticky deck ---------- */
+  @media (min-width: 900px) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
+    .pf-deck { gap: 28px; }
+
+    .pf-case {
+      position: sticky;
+      inset-block-start: 16px;
+      block-size: calc(100svh - 32px);
+    }
+    .pf-case__inner { block-size: 100%; }
+
+    .pf-ig {
+      position: sticky;
+      inset-block-start: 16px;
+      block-size: 70svh;
+      min-block-size: 0;
+    }
+  }
+
+  /* ---------- Case-study dialog ---------- */
   html.pf-lock { overflow: hidden; }
 
   .pf-modal {
@@ -2110,22 +2276,21 @@
     inset: 0;
     z-index: 9700;           /* above the nav (9500), below the cursor (9998) */
     perspective: 1400px;
+    --accent: #6c63ff;
   }
   .pf-modal[hidden] { display: none; }
 
-  .pf-modal__scrim {
-    position: absolute;
-    inset: 0;
-    background: rgb(10 10 20 / 0.92);
-  }
+  .pf-modal__scrim { position: absolute; inset: 0; background: rgb(10 10 20 / 0.92); }
 
   .pf-modal__panel {
     position: absolute;
     inset: clamp(10px, 3vh, 32px) clamp(10px, 3vw, 48px);
     border-radius: 28px;
     overflow: hidden;
-    background: var(--card-secondary);
     border: 1px solid rgb(255 255 255 / 0.1);
+    background:
+      radial-gradient(ellipse 70% 70% at 75% 30%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+      #12131c;
   }
 
   .pf-modal__inner {
@@ -2133,18 +2298,13 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: clamp(14px, 2.4vw, 28px);
+    padding: clamp(14px, 2.2vw, 28px);
+    box-sizing: border-box;
     transform-origin: 50% 0;
   }
 
-  .pf-modal__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .pf-modal__titles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; min-inline-size: 0; }
+  .pf-modal__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .pf-modal__titles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-inline-size: 0; }
 
   .pf-modal__title {
     font-family: var(--font-display);
@@ -2152,14 +2312,7 @@
     font-size: clamp(22px, 2.4vw, 34px);
     line-height: 1.1;
     color: var(--pure-white);
-  }
-
-  .pf-modal__desc {
-    flex-basis: 100%;
-    font-family: var(--font-body);
-    font-size: clamp(13px, 1.1vw, 16px);
-    line-height: 1.55;
-    color: rgb(255 255 255 / 0.72);
+    margin-inline-end: 4px;
   }
 
   /* The site's one outline button, squared up to a 44px hit area. */
@@ -2173,14 +2326,23 @@
     padding: 0;
   }
 
-  .pf-gallery {
-    position: relative;
+  .pf-modal__body {
     flex: 1;
     min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 20px;
+    scrollbar-width: thin;
   }
 
+  .pf-modal__gal { min-inline-size: 0; display: flex; flex-direction: column; gap: 10px; }
+
+  .pf-gallery { position: relative; }
+
   .pf-gallery__track {
-    block-size: 100%;
     display: flex;
     overflow-x: auto;
     overscroll-behavior-x: contain;
@@ -2195,37 +2357,17 @@
   .pf-slide {
     flex: 0 0 100%;
     min-inline-size: 0;
-    block-size: 100%;
     scroll-snap-align: center;
     scroll-snap-stop: always;
-    /* A definite one-cell grid: the frame's 100% height then resolves
-       against the slide instead of against its own content. */
     display: grid;
-    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
-    padding-inline: 2px;
+    place-items: center;
+    padding: 4px 2px 10px;
   }
 
-  /* 2px --card-primary gradient border + 6px --card-secondary mat. */
-  .pf-frame {
-    inline-size: 100%;
-    block-size: 100%;
-    box-sizing: border-box;
-    padding: 6px;
-    border: 2px solid transparent;
-    border-radius: 20px;
-    background:
-      linear-gradient(var(--card-secondary), var(--card-secondary)) padding-box,
-      var(--card-primary) border-box;
-    display: block;
-  }
-
-  .pf-frame img {
-    display: block;
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: contain;
-    border-radius: 14px;
-    -webkit-user-drag: none;
+  /* The window never outgrows what is left of the panel's height. */
+  .pf-slide .pf-win {
+    inline-size: min(100%, calc((100svh - 300px) * 1.6));
+    min-inline-size: min(100%, 280px);
   }
 
   .pf-gallery__nav {
@@ -2236,8 +2378,8 @@
     background: rgb(10 10 20 / 0.55);
     backdrop-filter: blur(6px);
   }
-  .pf-gallery__nav--prev { inset-inline-start: 10px; }
-  .pf-gallery__nav--next { inset-inline-end: 10px; }
+  .pf-gallery__nav--prev { inset-inline-start: 8px; }
+  .pf-gallery__nav--next { inset-inline-end: 8px; }
   .pf-gallery__nav:disabled { opacity: 0.3; cursor: default; }
 
   .pf-modal__foot { display: flex; justify-content: center; align-items: center; gap: 18px; }
@@ -2253,8 +2395,6 @@
   }
 
   .pf-dots { display: flex; gap: 4px; }
-
-  /* 24px hit area around an 8px dot. */
   .pf-dot {
     inline-size: 24px;
     block-size: 24px;
@@ -2273,38 +2413,44 @@
     background: rgb(255 255 255 / 0.35);
     transition: inline-size 0.3s ease, background 0.3s ease;
   }
-  .pf-dot.is-active::before { inline-size: 22px; background: var(--card-primary); }
+  .pf-dot.is-active::before { inline-size: 22px; background: var(--accent); }
+
+  .pf-modal__story { display: grid; gap: 16px; align-content: start; min-inline-size: 0; padding-block-end: 8px; }
+
+  .pf-story__block h4 {
+    font-family: var(--font-accent);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-block-end: 6px;
+  }
+  .pf-story__block p {
+    font-family: var(--font-body);
+    font-size: clamp(13px, 1.05vw, 15px);
+    line-height: 1.6;
+    color: rgb(255 255 255 / 0.78);
+  }
+
+  @media (min-width: 1280px) {
+    .pf-modal__body { grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-content: stretch; }
+    .pf-slide .pf-win { inline-size: min(100%, calc((100svh - 250px) * 1.6)); }
+  }
 
   /* No Flip (reduced motion / GSAP missing): plain fade. */
   .pf-modal.pf-modal--fade { opacity: 0; transition: opacity 0.3s ease; }
   .pf-modal.pf-modal--fade.is-open { opacity: 1; }
 
-  /* ---------- Responsive ---------- */
-  @media (max-width: 1023px) {
-    .pf-grid { --pf-row: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; }
-    .pf-grid > .pf-card { grid-area: auto; aspect-ratio: 16 / 10; }
-    .pf-grid > [data-slug="aurum"] { grid-column: 1 / -1; aspect-ratio: 2 / 1; }
-  }
-
-  /* Portrait: the 16:10 screenshots are far shorter than the gallery, so the
-     frame hugs the image instead of leaving a tall empty mat. */
-  @media (max-aspect-ratio: 1 / 1) {
-    .pf-frame {
-      block-size: auto;
-      align-self: center;
-      aspect-ratio: 1440 / 900;
-    }
-  }
-
   @media (max-width: 639px) {
     .pf__inner { padding-inline: 16px; }
-    .pf-grid { grid-template-columns: minmax(0, 1fr); }
-    .pf-grid > [data-slug="aurum"] { grid-column: auto; aspect-ratio: 16 / 10; }
+    .pf-deck { padding-inline: 16px; }
     .pf-modal__panel { border-radius: 20px; }
+    .pf-win__addr { max-inline-size: 78%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .pf-card, .pf-card--ig::before, .pf-ig__arrow { transition: none; }
-    .pf-card__video { display: none; }
+    .pf-ig::before, .pf-ig::after { animation: none; }
+    .pf-win__video { display: none; }
   }
 }
