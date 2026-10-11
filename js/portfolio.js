@@ -62,22 +62,30 @@
 
   function caseHTML(p, i) {
     var num = (i < 9 ? '0' : '') + (i + 1) + ' / ' + (N < 10 ? '0' : '') + N;
+    /* Row 1: the meta bar. Row 2: the "stage" — text column on the left,
+       browser window on the right; the window is the height reference. */
     return '<article class="pf-case" data-index="' + i + '" data-slug="' + esc(p.slug) + '" style="--accent:' + esc(p.accent) + '">' +
       '<div class="pf-case__bgname" aria-hidden="true"><span>' + esc(p.name) + '</span></div>' +
       '<div class="pf-case__inner">' +
-        '<div class="pf-case__text">' +
-          '<div class="pf-case__meta">' +
-            '<span class="pf-case__num">' + num + '</span>' +
-            '<span class="pf-tag">' + esc(p.category) + '</span>' +
-            '<span class="pf-tag pf-tag--ghost">' + typeLabel(p) + '</span>' +
-          '</div>' +
-          '<h3 class="pf-case__name">' + esc(p.name) + '</h3>' +
-          '<div class="pf-case__block"><h4 class="pf-case__label">A feladat</h4><p>' + esc(p.task) + '</p></div>' +
-          '<div class="pf-case__block"><h4 class="pf-case__label">A megoldás</h4><p>' + esc(p.solution) + '</p></div>' +
-          '<ul class="pf-case__chips">' + p.chips.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
-          '<button type="button" class="btn pf-case__btn">Esettanulmány <i data-lucide="arrow-right" class="icon"></i></button>' +
+        '<div class="pf-case__meta">' +
+          '<span class="pf-case__num">' + num + '</span>' +
+          '<span class="pf-tag">' + esc(p.category) + '</span>' +
+          '<span class="pf-tag pf-tag--ghost">' + typeLabel(p) + '</span>' +
         '</div>' +
-        '<div class="pf-case__media">' + windowHTML(p) + '</div>' +
+        '<div class="pf-case__content"><div class="pf-case__stage">' +
+          '<div class="pf-case__text">' +
+            '<div class="pf-case__top"><h3 class="pf-case__name">' + esc(p.name) + '</h3></div>' +
+            '<div class="pf-case__mid">' +
+              '<div class="pf-case__block"><h4 class="pf-case__label">A feladat</h4><p>' + esc(p.task) + '</p></div>' +
+              '<div class="pf-case__block"><h4 class="pf-case__label">A megoldás</h4><p>' + esc(p.solution) + '</p></div>' +
+            '</div>' +
+            '<div class="pf-case__bottom">' +
+              '<ul class="pf-case__chips">' + p.chips.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+              '<button type="button" class="btn pf-case__btn">Esettanulmány <i data-lucide="arrow-right" class="icon"></i></button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pf-case__media">' + windowHTML(p) + '</div>' +
+        '</div></div>' +
       '</div>' +
     '</article>';
   }
@@ -86,16 +94,19 @@
   function igHTML() {
     return '<article class="pf-ig" id="pf-ig">' +
       '<div class="pf-ig__inner">' +
-        '<svg class="pf-ig__glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
+        '<span class="pf-ig__float"><svg class="pf-ig__glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
           '<rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle>' +
-          '<circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>' +
+          '<circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg></span>' +
         '<p class="pf-ig__kicker">Ez csak egy kis ízelítő</p>' +
         '<h3 class="pf-ig__title">Még több munka az Instagramon</h3>' +
         '<p class="pf-ig__handle">@webdeveloper_varbro</p>' +
         '<a class="pf-ig__btn" href="' + IG_URL + '" target="_blank" rel="noopener">Megnézem az Instagramon ' +
           '<i data-lucide="arrow-up-right" class="icon"></i></a>' +
       '</div>' +
-    '</article>';
+    '</article>' +
+    /* Empty space after the Instagram card: the card stays stuck while the
+       reader scrolls through it (the hold). Zero height outside stacking. */
+    '<div class="pf-hold" aria-hidden="true"></div>';
   }
 
   deck.innerHTML = data.map(caseHTML).join('') + igHTML();
@@ -234,7 +245,9 @@
         lines: []
       };
       var textBits = [r.name].concat(r.paras);
-      if (hasSplit && !plain) {
+      /* Line splitting only where the card has a fixed height (stacking): in
+         the flow layout the split/revert reflow would shift the cards below. */
+      if (hasSplit && !plain && stackOn) {
         textBits.forEach(function (el) {
           var target = el.tagName === 'DIV' ? el.querySelector('p') : el;
           var sp = SplitText.create(target, { type: 'lines', linesClass: 'pf-line' });
@@ -279,12 +292,42 @@
       }
 
       ScrollTrigger.create({
-        trigger: c, start: 'top 70%', once: true,
+        trigger: c, once: true,
+        /* stacking: when the card has (almost) settled at the top;
+           flow layout: when it is well into view */
+        start: function () { return stackOn ? 'top 18%' : 'top 85%'; },
         onEnter: play,
         /* a reload restored below the card lands past the start — still reveal */
         onLeave: play
       });
     });
+
+    /* Instagram card: its content plays once when the card settles. */
+    (function () {
+      var parts = [
+        igCard.querySelector('.pf-ig__float'),
+        igCard.querySelector('.pf-ig__kicker'),
+        igCard.querySelector('.pf-ig__title'),
+        igCard.querySelector('.pf-ig__handle'),
+        igBtn
+      ];
+      if (plain) gsap.set(parts, { opacity: 0 });
+      else gsap.set(parts, { y: 28, opacity: 0 });
+      var done = false;
+      function playIg() {
+        if (done) return;
+        done = true;
+        gsap.to(parts, plain
+          ? { opacity: 1, duration: 0.5, stagger: 0.08 }
+          : { y: 0, opacity: 1, duration: 0.8, ease: EASE, stagger: 0.09,
+              onComplete: function () { gsap.set(parts, { clearProps: 'transform' }); } });
+      }
+      ScrollTrigger.create({
+        trigger: igCard, once: true,
+        start: function () { return stackOn ? 'top 30%' : 'top 85%'; },
+        onEnter: playIg, onLeave: playIg
+      });
+    })();
 
     /* Section header: headline words, then eyebrow and subtitle. */
     var eyebrow = section.querySelector('.pf__eyebrow');

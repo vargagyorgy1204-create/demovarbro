@@ -1846,17 +1846,26 @@
    === Portfolio section ===
    #portfolio ("Munkáim"): "stacking cases". Every project is one dark,
    viewport-tall card floating on the light section. The cards are
-   position: sticky — the next one scrolls up and covers the previous, which
-   scales down and darkens (scrubbed in js/portfolio.js; no pin anywhere in
-   this section). Card content is rendered from js/portfolio-data.js.
+   position: sticky children of ONE shared container (#pf-deck) — the next
+   one scrolls up and covers the previous, which scales down and darkens
+   (scrubbed in js/portfolio.js; no pin anywhere in this section). Card
+   content is rendered from js/portfolio-data.js.
 
    Stacking is on only for >= 900px wide, >= 560px tall, no reduced-motion.
    Everywhere else the same cards are ordinary stacked blocks.
+
+   Tweak knobs (on .pf-deck):  --dwell  scroll held on a settled card before
+                                        the next one starts to enter
+                               --hold   the same for the Instagram card
+
+   Spacing inside a card uses ONE scale: --s1..--s5 = 8 / 16 / 24 / 32 / 48
+   (multiples 1,2,3,4,6 of --u). On short screens --u shrinks, so all the
+   steps shrink in proportion.
    ========================================================================== */
 @layer portfolio {
 
   #portfolio {
-    padding-block: clamp(80px, 12vh, 140px) clamp(56px, 9vh, 110px);
+    padding-block: clamp(80px, 12vh, 140px) 24px;
     background: var(--card-secondary-light);
   }
 
@@ -1895,22 +1904,28 @@
 
   /* ---------- Deck ---------- */
   .pf-deck {
+    --dwell: 60svh;
+    --hold: 80svh;
     display: flex;
     flex-direction: column;
     gap: 24px;
     padding-inline: 16px;
   }
 
+  .pf-hold { display: none; }
+
   /* ---------- Shared bits ---------- */
   .pf-tag {
-    display: inline-block;
-    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    block-size: 28px;
+    padding: 0 12px;
     font-family: var(--font-accent);
     font-weight: 500;
     font-size: 11px;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    line-height: 1.3;
+    line-height: 1;
     color: var(--pure-white);
     background: rgb(255 255 255 / 0.1);
     border: 1px solid rgb(255 255 255 / 0.18);
@@ -2000,9 +2015,17 @@
   .pf-win__video { opacity: 0; transition: opacity 0.4s ease; }
   .pf-win.has-video .pf-win__video { opacity: 1; }
 
-  /* ---------- Case card (flow / mobile layout) ---------- */
+  /* ---------- Case card — one-column layout (mobile / flow) ----------
+     Order: meta row, name, window, task, solution, chips, button. The
+     wrappers dissolve (display: contents) so every piece is a flex item of
+     .pf-case__inner and can be ordered. */
   .pf-case {
-    --pf-pad: 20px;
+    --u: 8px;
+    --s1: var(--u);
+    --s2: calc(var(--u) * 2);
+    --s3: calc(var(--u) * 3);
+    --s4: calc(var(--u) * 4);
+    --s5: calc(var(--u) * 6);
     position: relative;
     isolation: isolate;
     overflow: hidden;
@@ -2037,14 +2060,18 @@
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: var(--pf-pad);
+    gap: var(--s2);
+    padding: var(--s3);
     box-sizing: border-box;
   }
 
-  /* One column on small screens: number + chips, name, window, task,
-     solution, chips, button. */
-  .pf-case__text { display: contents; }
+  .pf-case__content,
+  .pf-case__stage,
+  .pf-case__text,
+  .pf-case__top,
+  .pf-case__mid,
+  .pf-case__bottom { display: contents; }
+
   .pf-case__meta   { order: 1; }
   .pf-case__name   { order: 2; }
   .pf-case__media  { order: 3; min-inline-size: 0; }
@@ -2056,7 +2083,8 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 10px;
+    gap: var(--s1) 10px;
+    min-block-size: 36px;
   }
 
   .pf-case__num {
@@ -2064,37 +2092,40 @@
     font-weight: 500;
     font-size: 13px;
     letter-spacing: 1.5px;
+    line-height: 1;
     color: rgb(255 255 255 / 0.6);
-    margin-inline-end: 4px;
+    margin-inline-end: 6px;
   }
 
   .pf-case__name {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(28px, min(3.6vw, 6.2svh), 56px);
+    font-size: clamp(28px, 7vw, 40px);
     line-height: 1.05;
+    margin: 0;
     color: var(--pure-white);
   }
 
   .pf-case__label {
     font-family: var(--font-accent);
     font-weight: 600;
-    font-size: 11px;
-    letter-spacing: 1.8px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
+    line-height: 1;
     color: var(--accent);
-    margin-block-end: 5px;
+    margin-block-end: var(--s1);
   }
 
   .pf-case__block p {
     font-family: var(--font-body);
     font-weight: 400;
-    font-size: clamp(13px, min(1.15vw, 2.3svh), 16px);
-    line-height: 1.55;
+    font-size: 15px;
+    line-height: 1.5;
     color: rgb(255 255 255 / 0.75);
   }
 
-  .pf-case__chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .pf-case__chips { display: flex; flex-wrap: wrap; gap: var(--s1); list-style: none; padding: 0; margin: 0; }
   .pf-case__chips li {
     padding: 5px 13px;
     font-family: var(--font-ui);
@@ -2108,8 +2139,11 @@
   .pf-case__btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    align-self: flex-start;
+    inline-size: 100%;
+    min-block-size: 48px;
+    padding-block: 0;
   }
 
   /* ---------- Instagram card ---------- */
@@ -2158,7 +2192,10 @@
 
   .pf-ig__inner { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.6svh, 14px); max-inline-size: 1100px; }
 
-  .pf-ig__glyph { inline-size: 56px; block-size: 56px; color: rgb(255 255 255 / 0.9); }
+  /* The wrapper floats (6px travel); the svg inside is free for the entrance tween. */
+  .pf-ig__float { display: block; animation: pfFloat 5s ease-in-out infinite alternate; }
+  @keyframes pfFloat { from { transform: translateY(-3px); } to { transform: translateY(3px); } }
+  .pf-ig__glyph { display: block; inline-size: 56px; block-size: 56px; color: rgb(255 255 255 / 0.9); }
 
   .pf-ig__kicker {
     font-family: var(--font-body);
@@ -2206,60 +2243,105 @@
   .pf-ig__btn:focus-visible { background: var(--pure-white); color: #4B1956; }
   .pf-ig__btn:focus-visible { outline: 3px solid var(--pure-white); outline-offset: 3px; }
 
-  /* ---------- Desktop: two columns ---------- */
+  /* ---------- Desktop: meta bar + two-column stage ----------
+     Row 1 (36px): "01 / 06" + chips. Row 2: the stage — text column left
+     (~36%), browser window right (~64%). The window is the height
+     reference: the stage is as tall as the window, and the text column
+     stretches to it, so name/window share a top edge and button/window a
+     bottom edge. Text uses the same left edge as the meta bar. */
   @media (min-width: 900px) and (min-height: 560px) {
-    /* Horizontal padding follows the width, vertical follows the height, so
-       a short laptop screen (1097x617) keeps room for the longest text. */
-    .pf-case { --pf-pad: clamp(24px, 4vw, 64px); --pf-padv: clamp(16px, 4.6svh, 64px); border-radius: 32px; }
+    .pf-case {
+      --u: clamp(5px, 0.9svh, 8px);
+      --padx: 48px;
+      border-radius: 32px;
+    }
 
     .pf-case__inner {
       display: grid;
+      grid-template-rows: 36px minmax(0, 1fr);
+      row-gap: var(--s3);
+      /* top meta row 32px from the card top; the left padding also clears the fixed nav logo */
+      padding: var(--s4) var(--padx) var(--s4) max(var(--padx), 84px);
+    }
+
+    .pf-case__content {
+      display: grid;
+      align-content: center;
+      min-block-size: 0;
+      min-inline-size: 0;
+    }
+
+    .pf-case__stage {
+      display: grid;
       grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
-      column-gap: 4vw;
-      align-items: center;
-      padding-block: var(--pf-padv);
-      /* keeps the text clear of the fixed nav logo in the top-left corner */
-      padding-inline-start: max(var(--pf-pad), 84px);
+      column-gap: var(--s5);
+      align-items: stretch;
+      min-inline-size: 0;
     }
 
     .pf-case__text {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: clamp(7px, 1.7svh, 20px);
+      justify-content: space-between;
+      gap: var(--s2);
       min-inline-size: 0;
     }
+    .pf-case__top,
+    .pf-case__mid,
+    .pf-case__bottom { display: flex; flex-direction: column; min-inline-size: 0; }
+    .pf-case__mid    { gap: var(--s3); }
+    .pf-case__bottom { gap: var(--s3); }
 
-    /* short screens: slightly tighter chips and button */
-    @media (max-height: 700px) {
-      .pf-case__name { font-size: clamp(26px, 2.7vw, 40px); }
-      .pf-case__chips li { padding: 4px 11px; font-size: 12px; }
-      .pf-case__btn { padding: 11px 26px; font-size: 14px; }
-    }
-
-    /* order only matters in the one-column layout */
     .pf-case__meta, .pf-case__name, .pf-case__media, .pf-case__block, .pf-case__chips, .pf-case__btn { order: 0; }
 
-    .pf-case__media { display: flex; align-items: center; }
+    .pf-case__meta { flex-wrap: nowrap; min-block-size: 0; block-size: 36px; gap: var(--s1); }
+    .pf-case__num { margin-inline-end: var(--s1); }
 
-    /* The window keeps its size first: it never grows taller than the card. */
-    .pf-case .pf-win {
-      max-inline-size: calc((100svh - 32px - 2 * var(--pf-padv) - 36px) * 16 / 9);
+    .pf-case__name {
+      font-size: clamp(26px, 2.7vw, 52px);
+      line-height: 1.02;
+      /* optical: pulls the cap-height up to the window's top edge */
+      margin: -0.03em 0 0;
     }
+
+    .pf-case__block p { font-size: clamp(12.5px, 1.05vw, 16px); }
+    .pf-case__chips li { padding: 4px 12px; font-size: clamp(11.5px, 0.95vw, 13px); }
+
+    .pf-case__btn {
+      inline-size: auto;
+      align-self: flex-start;
+      min-block-size: 0;
+      padding: clamp(10px, 1.3svh, 14px) 28px;
+      font-size: clamp(13px, 1vw, 15px);
+    }
+
+    .pf-case__media { display: flex; align-items: flex-start; }
+    .pf-case .pf-win { margin-inline: auto 0; }
 
     .pf-ig { border-radius: 32px; }
   }
 
-  /* ---------- Stacking: the sticky deck ---------- */
+  @media (min-width: 900px) and (min-height: 560px) and (max-width: 1279px) {
+    .pf-case { --padx: 32px; }
+  }
+
+  /* ---------- Stacking: sticky cards, dwell, hold ---------- */
   @media (min-width: 900px) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
-    .pf-deck { gap: 28px; }
+    .pf-deck { gap: 0; }
 
     .pf-case {
       position: sticky;
       inset-block-start: 16px;
       block-size: calc(100svh - 32px);
+      /* the dwell: space after a settled card before the next one enters
+         (+16px because the settled card sits 16px below the viewport top) */
+      margin-block-end: calc(var(--dwell) + 16px);
     }
     .pf-case__inner { block-size: 100%; }
+
+    /* the window can never grow taller than the content row */
+    .pf-case__content { container-type: size; }
+    .pf-case .pf-win { max-inline-size: calc((100cqh - 36px) * 16 / 9); }
 
     .pf-ig {
       position: sticky;
@@ -2267,9 +2349,12 @@
       block-size: 70svh;
       min-block-size: 0;
     }
+
+    /* the hold: the Instagram card stays stuck for this much scroll */
+    .pf-hold { display: block; block-size: var(--hold); }
   }
 
-  /* ---------- Case-study dialog ---------- */
+  /* ---------- Case-study dialog (one screen) ---------- */
   html.pf-lock { overflow: hidden; }
 
   .pf-modal {
@@ -2285,7 +2370,9 @@
 
   .pf-modal__panel {
     position: absolute;
-    inset: clamp(10px, 3vh, 32px) clamp(10px, 3vw, 48px);
+    inset: 24px;
+    max-inline-size: 1600px;
+    margin-inline: auto;
     border-radius: 28px;
     overflow: hidden;
     border: 1px solid rgb(255 255 255 / 0.1);
@@ -2294,26 +2381,33 @@
       #12131c;
   }
 
+  /* header (auto) + body (the rest) */
   .pf-modal__inner {
     block-size: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: clamp(14px, 2.2vw, 28px);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     box-sizing: border-box;
     transform-origin: 50% 0;
   }
 
-  .pf-modal__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-  .pf-modal__titles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-inline-size: 0; }
+  .pf-modal__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-block-size: 72px;
+    padding: 14px 32px 14px;
+    box-sizing: border-box;
+  }
+  .pf-modal__titles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-inline-size: 0; }
 
   .pf-modal__title {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(22px, 2.4vw, 34px);
-    line-height: 1.1;
+    font-size: clamp(24px, 2.6vw, 40px);
+    line-height: 1.05;
+    margin: 0;
     color: var(--pure-white);
-    margin-inline-end: 4px;
   }
 
   /* The site's one outline button, squared up to a 44px hit area. */
@@ -2327,29 +2421,48 @@
     padding: 0;
   }
 
+  /* Mobile / narrow: one column, the body scrolls inside the panel. */
   .pf-modal__body {
-    flex: 1;
     min-block-size: 0;
+    padding: 0 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .pf-modal__body::-webkit-scrollbar { display: none; }
+
+  .pf-modal__gal {
+    flex: none;
+    block-size: 45dvh;
+    min-block-size: 220px;
+    min-inline-size: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    gap: 20px;
-    scrollbar-width: thin;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 8px;
   }
 
-  .pf-modal__gal { min-inline-size: 0; display: flex; flex-direction: column; gap: 10px; }
-
-  .pf-gallery { position: relative; }
+  .pf-gallery {
+    min-block-size: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 16px;
+  }
 
   .pf-gallery__track {
+    min-inline-size: 0;
+    block-size: 100%;
     display: flex;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     cursor: grab;
+    container-type: size;
   }
   .pf-gallery__track::-webkit-scrollbar { display: none; }
   .pf-gallery__track.is-dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }
@@ -2358,32 +2471,25 @@
   .pf-slide {
     flex: 0 0 100%;
     min-inline-size: 0;
+    block-size: 100%;
     scroll-snap-align: center;
     scroll-snap-stop: always;
     display: grid;
     place-items: center;
-    padding: 4px 2px 10px;
   }
 
-  /* The window never outgrows what is left of the panel's height. */
+  /* The window scales to the track: never wider than it, never taller than it
+     (36px title bar + a 16:10 viewport). */
   .pf-slide .pf-win {
-    inline-size: min(100%, calc((100svh - 300px) * 1.6));
-    min-inline-size: min(100%, 280px);
+    margin: 0;
+    inline-size: min(100cqw, (100cqh - 36px) * 1.6);
   }
 
-  .pf-gallery__nav {
-    position: absolute;
-    inset-block-start: 50%;
-    translate: 0 -50%;
-    z-index: 2;
-    background: rgb(10 10 20 / 0.55);
-    backdrop-filter: blur(6px);
-  }
-  .pf-gallery__nav--prev { inset-inline-start: 8px; }
-  .pf-gallery__nav--next { inset-inline-end: 8px; }
+  /* Arrows sit outside the image edges (desktop); hidden on phones — swipe + dots remain. */
+  .pf-gallery__nav { display: none; align-self: center; }
   .pf-gallery__nav:disabled { opacity: 0.3; cursor: default; }
 
-  .pf-modal__foot { display: flex; justify-content: center; align-items: center; gap: 18px; }
+  .pf-modal__foot { display: flex; justify-content: center; align-items: center; gap: 16px; min-block-size: 24px; }
 
   .pf-counter {
     font-family: var(--font-accent);
@@ -2395,7 +2501,7 @@
     text-align: center;
   }
 
-  .pf-dots { display: flex; gap: 4px; }
+  .pf-dots { display: flex; gap: 0; }
   .pf-dot {
     inline-size: 24px;
     block-size: 24px;
@@ -2416,27 +2522,50 @@
   }
   .pf-dot.is-active::before { inline-size: 22px; background: var(--accent); }
 
-  .pf-modal__story { display: grid; gap: 16px; align-content: start; min-inline-size: 0; padding-block-end: 8px; }
+  .pf-modal__story { display: grid; gap: 24px; align-content: start; min-inline-size: 0; }
 
   .pf-story__block h4 {
     font-family: var(--font-accent);
     font-weight: 600;
-    font-size: 11px;
-    letter-spacing: 1.8px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
+    line-height: 1;
     color: var(--accent);
-    margin-block-end: 6px;
+    margin-block-end: 8px;
   }
   .pf-story__block p {
     font-family: var(--font-body);
-    font-size: clamp(13px, 1.05vw, 15px);
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.5;
     color: rgb(255 255 255 / 0.78);
   }
 
-  @media (min-width: 1280px) {
-    .pf-modal__body { grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-content: stretch; }
-    .pf-slide .pf-win { inline-size: min(100%, calc((100svh - 250px) * 1.6)); }
+  /* Wide: two columns — gallery | text — and nothing scrolls. 1024px, not 1100,
+     so a 1097px laptop gets the two-column dialog too. */
+  @media (min-width: 1024px) {
+    .pf-modal__head { padding-inline: 32px; }
+
+    .pf-modal__body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) clamp(340px, 26vw, 400px);
+      gap: 32px;
+      padding: 0 32px 32px;
+      overflow: hidden;
+    }
+
+    .pf-modal__gal { block-size: auto; min-block-size: 0; }
+
+    .pf-gallery { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+    .pf-gallery__nav { display: grid; }
+
+    /* text column: fits by construction, vertically centred */
+    .pf-modal__story {
+      align-content: center;
+      overflow: hidden;
+      min-block-size: 0;
+    }
+    .pf-story__block p { font-size: clamp(13px, 1.7svh, 16px); }
   }
 
   /* No Flip (reduced motion / GSAP missing): plain fade. */
@@ -2446,12 +2575,13 @@
   @media (max-width: 639px) {
     .pf__inner { padding-inline: 16px; }
     .pf-deck { padding-inline: 16px; }
-    .pf-modal__panel { border-radius: 20px; }
+    .pf-modal__panel { inset: 12px; border-radius: 20px; }
+    .pf-modal__head { padding-inline: 16px; }
     .pf-win__addr { max-inline-size: 78%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .pf-ig::before, .pf-ig::after { animation: none; }
+    .pf-ig::before, .pf-ig::after, .pf-ig__float { animation: none; }
     .pf-win__video { display: none; }
   }
 }
