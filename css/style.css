@@ -2483,6 +2483,8 @@
   .pf-slide .pf-win {
     margin: 0;
     inline-size: min(100cqw, (100cqh - 36px) * 1.6);
+    /* a tight shadow: the track clips anything that spreads past its edges */
+    box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent, #6c63ff) 55%, transparent);
   }
 
   /* Arrows sit outside the image edges (desktop); hidden on phones — swipe + dots remain. */
