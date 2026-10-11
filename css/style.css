@@ -2156,7 +2156,7 @@
   @keyframes pfGlowA { to { transform: translate(30%, 22%) scale(1.15); } }
   @keyframes pfGlowB { to { transform: translate(-28%, -20%) scale(1.2); } }
 
-  .pf-ig__inner { display: flex; flex-direction: column; align-items: center; gap: 14px; max-inline-size: 900px; }
+  .pf-ig__inner { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.6svh, 14px); max-inline-size: 1100px; }
 
   .pf-ig__glyph { inline-size: 56px; block-size: 56px; color: rgb(255 255 255 / 0.9); }
 
@@ -2169,8 +2169,9 @@
   .pf-ig__title {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(36px, 5vw, 80px);
+    font-size: clamp(32px, min(4.6vw, 7.2svh), 76px);
     line-height: 1.05;
+    text-wrap: balance;
     color: var(--pure-white);
   }
 
