@@ -204,7 +204,7 @@
   /* -------------------------------------------------------- stacking + parallax */
   if (hasGsap) {
     var mm = gsap.matchMedia();
-    mm.add('(min-width: 900px) and (min-height: 560px) and (prefers-reduced-motion: no-preference)', function () {
+    mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', function () {
       stackOn = true;
       scheduleActive();
 
